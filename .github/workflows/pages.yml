@@ -30,6 +30,8 @@ jobs:
           cp gps/index.html gps/app.js gps/nav.js gps/manifest.json gps/sw.js gps/icon-192.png gps/icon-512.png _site/gps/
           mkdir -p _site/gpl-calc
           cp gpl-calc/index.html _site/gpl-calc/
+          mkdir -p _site/gpl-calc-it
+          cp gpl-calc-it/index.html _site/gpl-calc-it/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
