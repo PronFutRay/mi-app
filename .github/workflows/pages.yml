@@ -28,6 +28,8 @@ jobs:
           cp index.html game.js manifest.json sw.js icon-192.png icon-512.png _site/
           mkdir -p _site/gps
           cp gps/index.html gps/app.js gps/nav.js gps/manifest.json gps/sw.js gps/icon-192.png gps/icon-512.png _site/gps/
+          mkdir -p _site/gpl-calc
+          cp gpl-calc/index.html _site/gpl-calc/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
