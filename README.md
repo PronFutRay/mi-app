@@ -25,3 +25,17 @@ Teclado: flechas, `Espacio` (mantener y soltar), `S` cambia proyectil.
 
 ## Desarrollo local
 Abre `index.html` en el navegador (o `python3 -m http.server`).
+
+---
+
+# 🧭 NavPro GPS (carpeta `gps/`)
+
+GPS en tiempo real con mapa, rutas alternativas, guía por voz en italiano y avisos de:
+📷 autovelox y tutor (1000/500/250/100 m) · 🚦 cámaras de semáforo · 🚫 varcos ZTL/carril bus · 🚧 pasos a nivel · 🏫 escuelas · ⤴ curvas peligrosas · ↱ giros · ⚠️ exceso de velocidad sobre el límite de la vía.
+
+- **Web:** `https://<usuario>.github.io/mi-app/gps/` (instalable desde Chrome → ⋮ → Instalar app)
+- **APK:** workflow *Build NavPro GPS APK* → Releases → `NavProGPS.apk`
+- **Probar sin conducir:** busca un destino y pulsa **🧪 Simular** (toca la etiqueta naranja para cambiar la velocidad).
+- Mantén pulsado el mapa para fijar un destino. Ajustes (⚙️) para activar/desactivar cada tipo de aviso.
+
+Datos: OpenStreetMap (mapas, autovelox, límites), OSRM (rutas), Nominatim (búsqueda). Pueden estar incompletos y no incluyen controles móviles ni tráfico en vivo.
