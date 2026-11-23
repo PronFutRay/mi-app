@@ -71,8 +71,12 @@ th{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(80px);background:var(--navy);color:#fff;padding:10px 18px;border-radius:99px;font-size:14px;transition:.25s;opacity:0}
 .toast.show{transform:translateX(-50%);opacity:1}
 @media(max-width:480px){.hero .v{font-size:46px}.big input{font-size:36px}.hero .side{text-align:left}}
+.das{margin-top:14px}
+.das input{width:100%;margin-top:6px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:16px;background:transparent;color:var(--ink);outline:none}
+.das input:focus{border-color:var(--brand);box-shadow:0 0 0 4px rgba(255,106,26,.15)}
 #report{display:none}
 #report h1{font-size:22px;margin-bottom:2px}
+#report h1 .das-t{color:#ff6a1a;font-weight:700}
 #report .sub{color:#555;font-size:12px;margin-bottom:16px}
 #report h2{font-size:14px;text-transform:uppercase;letter-spacing:.06em;margin:18px 0 6px;border-bottom:2px solid #ff6a1a;padding-bottom:4px}
 #report table td,#report table th{border-bottom:1px solid #ddd;color:#000}
@@ -96,6 +100,10 @@ th{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.
       <input id="liters" inputmode="decimal" placeholder="0" autocomplete="off" aria-label="Litros cargados">
       <span class="unit">L</span>
       <button class="step" id="plus" aria-label="Sumar">+</button>
+    </div>
+    <div class="das">
+      <label class="label" for="das">Nº de DAS (opcional)</label>
+      <input id="das" placeholder="Ej. 26IT0000000000" autocomplete="off" autocapitalize="characters" maxlength="40">
     </div>
   </section>
 
@@ -261,10 +269,10 @@ function searchCity(q){
 function renderHist(){
   var el=$("hist");
   if(!S.hist.length){el.innerHTML='<div class="empty">Aún no hay cargas guardadas.</div>';return}
-  var h="<table><thead><tr><th>Fecha</th><th>Litros</th><th>°C</th><th>kg</th><th>kWh</th><th>€</th></tr></thead><tbody>";
+  var h="<table><thead><tr><th>Fecha</th><th>DAS</th><th>Litros</th><th>°C</th><th>kg</th><th>kWh</th><th>€</th></tr></thead><tbody>";
   S.hist.slice().reverse().forEach(function(e){
     var d=new Date(e.t);
-    h+="<tr><td>"+d.toLocaleDateString("es-ES",{day:"2-digit",month:"short"})+" "+d.toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"})+"</td><td>"+fmt(e.L,1)+"</td><td>"+fmt(e.T,1)+"</td><td>"+fmt(e.kg,2)+"</td><td>"+fmt(e.kwh,1)+"</td><td>"+(e.cost!=null?fmt(e.cost,2):"—")+"</td></tr>";
+    h+="<tr><td>"+d.toLocaleDateString("es-ES",{day:"2-digit",month:"short"})+" "+d.toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"})+"</td><td>"+esc(e.das||"—")+"</td><td>"+fmt(e.L,1)+"</td><td>"+fmt(e.T,1)+"</td><td>"+fmt(e.kg,2)+"</td><td>"+fmt(e.kwh,1)+"</td><td>"+(e.cost!=null?fmt(e.cost,2):"—")+"</td></tr>";
   });
   el.innerHTML=h+"</tbody></table>";
 }
@@ -280,13 +288,13 @@ $("geo").onclick=geolocate;
 $("cityForm").addEventListener("submit",function(e){e.preventDefault();var q=$("city").value.trim();if(q)searchCity(q)});
 $("save").onclick=function(){
   if(!last){toast("Introduce primero los litros");return}
-  S.hist.push({t:new Date().toISOString(),L:last.L,T:last.T,kg:last.r.kg,kwh:last.r.kwh,cost:last.r.cost!=null?last.r.cost:null});
+  S.hist.push({t:new Date().toISOString(),das:$("das").value.trim(),L:last.L,T:last.T,kg:last.r.kg,kwh:last.r.kwh,cost:last.r.cost!=null?last.r.cost:null});
   if(S.hist.length>200)S.hist.shift();
   persist();renderHist();toast("Carga guardada");
 };
 $("copy").onclick=function(){
   if(!last){toast("Introduce primero los litros");return}
-  var r=last.r,t="Carga GPL: "+fmt(last.L,1)+" L a "+fmt(last.T,1)+" °C\nMasa: "+fmt(r.kg,2)+" kg\nDensidad: "+fmt(r.rho,3)+" kg/L\nVolumen a 15 °C: "+fmt(r.v15,1)+" L\nEnergía: "+fmt(r.kwh,1)+" kWh\nCO2: "+fmt(r.co2,1)+" kg"+(r.cost!=null?"\nCoste: "+fmt(r.cost,2)+" €":"");
+  var r=last.r,t=($("das").value.trim()?"DAS nº "+$("das").value.trim()+"\n":"")+"Carga GPL: "+fmt(last.L,1)+" L a "+fmt(last.T,1)+" °C\nMasa: "+fmt(r.kg,2)+" kg\nDensidad: "+fmt(r.rho,3)+" kg/L\nVolumen a 15 °C: "+fmt(r.v15,1)+" L\nEnergía: "+fmt(r.kwh,1)+" kWh\nCO2: "+fmt(r.co2,1)+" kg"+(r.cost!=null?"\nCoste: "+fmt(r.cost,2)+" €":"");
   (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){toast("Resumen copiado")},function(){
     var a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();try{document.execCommand("copy");toast("Resumen copiado")}catch(e){}a.remove()});
 };
@@ -295,19 +303,20 @@ function dl(name,text,type){
   var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();a.remove();
 }
 $("csv").onclick=function(){
-  var rows=["Fecha;Litros;Temp_C;Kg;kWh;Euros"];
+  var rows=["Fecha;DAS;Litros;Temp_C;Kg;kWh;Euros"];
   var list=S.hist.slice();
-  if(!list.length&&last){list=[{t:new Date().toISOString(),L:last.L,T:last.T,kg:last.r.kg,kwh:last.r.kwh,cost:last.r.cost!=null?last.r.cost:null}]}
+  if(!list.length&&last){list=[{t:new Date().toISOString(),das:$("das").value.trim(),L:last.L,T:last.T,kg:last.r.kg,kwh:last.r.kwh,cost:last.r.cost!=null?last.r.cost:null}]}
   if(!list.length){toast("No hay datos");return}
   list.forEach(function(e){
-    rows.push([e.t,e.L,e.T,e.kg.toFixed(3),e.kwh.toFixed(2),e.cost!=null?e.cost.toFixed(2):""].join(";").replace(/\./g,","));
+    var n=function(x){return String(x).replace(".",",")};
+    rows.push([e.t,'"'+String(e.das||"").replace(/"/g,'""')+'"',n(e.L),n(e.T),n(e.kg.toFixed(3)),n(e.kwh.toFixed(2)),e.cost!=null?n(e.cost.toFixed(2)):""].join(";"));
   });
   dl("historial-gpl.csv","\ufeff"+rows.join("\n"),"text/csv;charset=utf-8");
 };
 function esc(x){return String(x).replace(/[&<>]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;"}[c]})}
 function exportPDF(){
   if(!last&&!S.hist.length){toast("No hay datos");return}
-  var now=new Date(),h='<h1>GPL Calc · Informe de carga</h1><div class="sub">Generado el '+now.toLocaleDateString("es-ES",{day:"2-digit",month:"long",year:"numeric"})+" a las "+now.toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"})+"</div>";
+  var dasV=$("das").value.trim(),now=new Date(),h='<h1>GPL Calc · Informe de carga'+(dasV?' <span class="das-t">· DAS nº '+esc(dasV)+'</span>':'')+'</h1><div class="sub">Generado el '+now.toLocaleDateString("es-ES",{day:"2-digit",month:"long",year:"numeric"})+" a las "+now.toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"})+"</div>";
   if(last){
     h+="<h2>Carga actual</h2><table><tbody>";
     h+="<tr><td>Litros cargados</td><td>"+fmt(last.L,1)+" L</td></tr><tr><td>Temperatura ambiente</td><td>"+fmt(last.T,1)+" °C</td></tr><tr><td>Composición</td><td>"+last.r.pP+" % propano / "+(100-last.r.pP)+" % butano</td></tr><tr><td><b>Masa de GPL</b></td><td><b>"+fmt(last.r.kg,2)+" kg</b></td></tr>";
@@ -315,9 +324,9 @@ function exportPDF(){
     h+="</tbody></table>";
   }
   if(S.hist.length){
-    h+="<h2>Historial</h2><table><thead><tr><th>Fecha</th><th>Litros</th><th>°C</th><th>kg</th><th>kWh</th><th>€</th></tr></thead><tbody>";
+    h+="<h2>Historial</h2><table><thead><tr><th>Fecha</th><th>DAS</th><th>Litros</th><th>°C</th><th>kg</th><th>kWh</th><th>€</th></tr></thead><tbody>";
     S.hist.slice().reverse().forEach(function(e){var d=new Date(e.t);
-      h+="<tr><td>"+d.toLocaleDateString("es-ES")+" "+d.toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"})+"</td><td>"+fmt(e.L,1)+"</td><td>"+fmt(e.T,1)+"</td><td>"+fmt(e.kg,2)+"</td><td>"+fmt(e.kwh,1)+"</td><td>"+(e.cost!=null?fmt(e.cost,2):"—")+"</td></tr>"});
+      h+="<tr><td>"+d.toLocaleDateString("es-ES")+" "+d.toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"})+"</td><td>"+esc(e.das||"—")+"</td><td>"+fmt(e.L,1)+"</td><td>"+fmt(e.T,1)+"</td><td>"+fmt(e.kg,2)+"</td><td>"+fmt(e.kwh,1)+"</td><td>"+(e.cost!=null?fmt(e.cost,2):"—")+"</td></tr>"});
     h+="</tbody></table>";
   }
   h+='<p class="sub" style="margin-top:18px">Valores estimados con densidades típicas de propano y butano. Uso informativo.</p>';
