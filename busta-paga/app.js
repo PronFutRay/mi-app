@@ -522,5 +522,6 @@ function copySummary() {
 }
 
 applyLang();
+window.__bcReady = true;
 window.__BC = { handleFiles: handleFiles, finish: finish };
 })();
