@@ -123,6 +123,7 @@ var last = null, lastText = "";
 function applyLang() {
   document.documentElement.lang = LANG;
   ["tag", "up_title", "up_sub", "bPhoto", "bFile", "drop", "bDemo", "priv", "prog_t", "disc", "pw_t", "pw_p"].forEach(function (k) { var e = $(k); if (e) e.textContent = t(k); });
+  $("bCancel").textContent = t("pw_no");
   $("pwOk").textContent = t("pw_ok"); $("pwNo").textContent = t("pw_no");
   $("l-it").classList.toggle("on", LANG === "it"); $("l-es").classList.toggle("on", LANG === "es");
   document.title = "Busta Chiara · " + t("tag");
@@ -140,13 +141,23 @@ var LIBS = {
   tess: ["vendor/tesseract.min.js", "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"]
 };
 var loaded = {};
-function loadScript(list) {
+function withTimeout(p, ms) {
+  return new Promise(function (res, rej) {
+    var tm = setTimeout(function () { rej(new Error("timeout")); }, ms);
+    p.then(function (v) { clearTimeout(tm); res(v); }, function (e) { clearTimeout(tm); rej(e); });
+  });
+}
+function loadScript(list, globalName) {
   return new Promise(function (resolve, reject) {
     var i = 0;
     (function next() {
       if (i >= list.length) return reject(new Error("lib"));
-      var src = list[i++], s = document.createElement("script");
-      s.src = src; s.onload = function () { resolve(src); }; s.onerror = function () { s.remove(); next(); };
+      var src = list[i++], s = document.createElement("script"), done = false;
+      var fail = function () { if (done) return; done = true; s.remove(); next(); };
+      var tm = setTimeout(fail, 20000);
+      s.src = src;
+      s.onload = function () { if (done) return; clearTimeout(tm); if (globalName && !window[globalName]) { fail(); return; } done = true; resolve(src); };
+      s.onerror = function () { clearTimeout(tm); fail(); };
       document.head.appendChild(s);
     })();
   });
@@ -155,7 +166,7 @@ function abs(p) { return new URL(p, location.href).href; }
 
 function loadPdf() {
   if (loaded.pdf) return loaded.pdf;
-  loaded.pdf = loadScript(LIBS.pdf).then(function (src) {
+  loaded.pdf = loadScript(LIBS.pdf, "pdfjsLib").then(function (src) {
     var local = src.indexOf("vendor/") === 0;
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = local ? abs("vendor/pdf.worker.min.js") : "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
     return window.pdfjsLib;
@@ -164,16 +175,32 @@ function loadPdf() {
 }
 
 var progressCb = function () {};
+var libCb = function () {};
 var workerP = null;
+function tessLogger(m) { if (m.status === "recognizing text") progressCb(m.progress); else libCb(m); }
+function createGuarded(opts, ms) {
+  return new Promise(function (resolve, reject) {
+    var timer, done = false, lg = opts.logger;
+    function arm() { clearTimeout(timer); timer = setTimeout(function () { if (!done) { done = true; reject(new Error("timeout")); } }, ms); }
+    opts.logger = function (m) { arm(); lg(m); };
+    arm();
+    window.Tesseract.createWorker("ita", 1, opts).then(function (w) {
+      if (done) { try { w.terminate(); } catch (e) {} return; }
+      done = true; clearTimeout(timer); resolve(w);
+    }, function (e) { if (!done) { done = true; clearTimeout(timer); reject(e); } });
+  });
+}
 function getWorker() {
   if (workerP) return workerP;
-  workerP = loadScript(LIBS.tess).then(function (src) {
+  workerP = loadScript(LIBS.tess, "Tesseract").then(async function (src) {
     var logger = function (m) { if (m.status === "recognizing text") progressCb(m.progress); };
-    var common = { logger: logger };
     var create = function (opts) { return window.Tesseract.createWorker("ita", 1, opts); };
-    var localOpts = { logger: logger, workerPath: abs("vendor/worker.min.js"), corePath: abs("vendor/core/"), langPath: abs("vendor/lang/") };
-    var p = src.indexOf("vendor/") === 0 ? create(localOpts).catch(function () { return create(common); }) : create(common);
-    return p;
+    if (src.indexOf("vendor/") === 0) {
+      try {
+        return await withTimeout(create({ logger: logger, workerPath: abs("vendor/worker.min.js"), corePath: abs("vendor/core/"), langPath: abs("vendor/lang/") }), 25000);
+      } catch (e) { /* alternativa: descargar el motor online */ }
+    }
+    return await withTimeout(create({ logger: logger }), 120000);
   }).catch(function (e) { workerP = null; throw e; });
   return workerP;
 }
@@ -272,6 +299,7 @@ async function extractPdf(file, status, psm) {
 function showProg(on) { $("prog").style.display = on ? "block" : "none"; }
 function setStatus(msg, frac) { $("pst").textContent = msg + (frac != null && frac > 0 ? " " + Math.round(frac * 100) + "%" : ""); if (frac != null) $("pbar").style.width = Math.max(4, Math.round(frac * 100)) + "%"; }
 
+var runId = 0, my = 0;
 async function readFiles(files, psm) {
   var texts = [], k = 0;
   for (var f of files) {
@@ -283,7 +311,9 @@ async function readFiles(files, psm) {
       progressCb = function (p) { setStatus(t("st_ocr"), 0.2 + p * 0.75); };
       texts.push(await extractPdf(f, setStatus, psm));
     } else {
-      setStatus(t("st_lib"), 0.05); await getWorker();
+      setStatus(t("st_lib"), 0.05);
+      libCb = function (m) { if (my === runId) setStatus(t("st_lib") + " · " + m.status, 0.05 + (m.progress || 0) * 0.1); };
+      await getWorker();
       setStatus(t("st_ocr"), 0.15);
       progressCb = function (p) { setStatus(t("st_ocr"), 0.15 + p * 0.8); };
       var cv = await fileToCanvas(f);
@@ -296,26 +326,32 @@ async function readFiles(files, psm) {
 async function handleFiles(fl) {
   var files = Array.prototype.slice.call(fl || []);
   if (!files.length) return;
+  var mine = ++runId; my = mine;
   $("out").classList.add("hidden"); $("upload").classList.add("hidden"); showProg(true); setStatus(t("st_lib"), 0.03);
   try {
     var txt = await readFiles(files, 6);
+    if (mine !== runId) return;
     var res = BustaParser.parse(txt);
     if (res.keyFound < 2 && files.some(function (f) { return !/pdf/i.test(f.type); })) {
       setStatus(t("st_ocr2"), 0.2);
       var txt2 = await readFiles(files, 3), res2 = BustaParser.parse(txt2);
+      if (mine !== runId) return;
       if (res2.keyFound > res.keyFound) { res = res2; txt = txt2; }
     }
     setStatus(t("st_an"), 1);
     finish(txt, res);
   } catch (e) {
+    if (mine !== runId) return;
     showProg(false); $("upload").classList.remove("hidden");
-    toast(e && e.message === "lib" ? t("err_lib") : t("err_read"));
+    var why = e && e.message ? e.message : String(e);
+    toast((why === "lib" || why === "timeout" ? t("err_lib") : t("err_read")) + " [" + why.slice(0, 60) + "]");
   }
 }
 function finish(txt, res) {
   lastText = txt; last = res; showProg(false); $("upload").classList.add("hidden");
   render(res); window.scrollTo(0, 0);
 }
+$("bCancel").onclick = function () { runId++; showProg(false); $("upload").classList.remove("hidden"); };
 $("bPhoto").onclick = function () { $("fPhoto").click(); };
 $("bFile").onclick = function () { $("fFile").click(); };
 $("fPhoto").onchange = function (e) { handleFiles(e.target.files); e.target.value = ""; };
