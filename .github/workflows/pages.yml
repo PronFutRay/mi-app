@@ -32,6 +32,8 @@ jobs:
           cp gpl-calc/index.html _site/gpl-calc/
           mkdir -p _site/gpl-calc-it
           cp gpl-calc-it/index.html _site/gpl-calc-it/
+          mkdir -p _site/busta-paga
+          cp busta-paga/index.html busta-paga/app.js busta-paga/parser.js busta-paga/sample.js busta-paga/manifest.json busta-paga/icon-192.png busta-paga/icon-512.png _site/busta-paga/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site

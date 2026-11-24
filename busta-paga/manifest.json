@@ -1,0 +1,14 @@
+{
+  "name": "Busta Chiara",
+  "short_name": "Busta Chiara",
+  "description": "Capisci la tua busta paga: ferie, permessi, contributi INPS, tasse e TFR spiegati in modo semplice",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b2a3a",
+  "theme_color": "#0b2a3a",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
