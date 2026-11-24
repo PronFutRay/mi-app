@@ -25,22 +25,30 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Instalar dependencias (Capacitor + lector PDF + OCR)
+      - name: Instalar Capacitor
         run: npm install
 
-      - name: Copiar la app a www/ (con librerías offline)
+      - name: Preparar www/ con la app
         run: |
           mkdir -p www/vendor/core www/vendor/lang
           cp index.html app.js parser.js sample.js manifest.json icon-192.png icon-512.png www/
-          cp node_modules/pdfjs-dist/build/pdf.min.js node_modules/pdfjs-dist/build/pdf.worker.min.js www/vendor/
-          cp node_modules/tesseract.js/dist/tesseract.min.js node_modules/tesseract.js/dist/worker.min.js www/vendor/
-          cp node_modules/tesseract.js-core/*.js www/vendor/core/
-          cp node_modules/tesseract.js-core/*.wasm www/vendor/core/ 2>/dev/null || true
-          IT=$(find node_modules/@tesseract.js-data/ita -name 'ita.traineddata.gz' | grep best_int | head -1)
-          [ -n "$IT" ] || IT=$(find node_modules/@tesseract.js-data/ita -name 'ita.traineddata.gz' | head -1)
-          echo "Idioma: $IT"
-          cp "$IT" www/vendor/lang/ita.traineddata.gz
-          du -sh www; ls www/vendor www/vendor/core www/vendor/lang
+
+      - name: Librerías offline PDF y OCR (opcional)
+        continue-on-error: true
+        run: |
+          mkdir -p /tmp/libs && cd /tmp/libs && npm init -y >/dev/null
+          npm install pdfjs-dist@3.11.174 tesseract.js@5.1.1 || echo "AVISO: no se pudieron instalar pdfjs/tesseract"
+          npm install @tesseract.js-data/ita || echo "AVISO: sin datos de idioma local"
+          cd - >/dev/null
+          N=/tmp/libs/node_modules
+          cp $N/pdfjs-dist/build/pdf.min.js $N/pdfjs-dist/build/pdf.worker.min.js www/vendor/ || echo "AVISO: pdf.js"
+          cp $N/tesseract.js/dist/tesseract.min.js $N/tesseract.js/dist/worker.min.js www/vendor/ || echo "AVISO: tesseract"
+          cp $N/tesseract.js-core/*.js www/vendor/core/ || echo "AVISO: core"
+          cp $N/tesseract.js-core/*.wasm www/vendor/core/ 2>/dev/null || true
+          IT=$(find $N/@tesseract.js-data/ita -name 'ita.traineddata.gz' 2>/dev/null | grep best_int | head -1)
+          [ -n "$IT" ] || IT=$(find $N/@tesseract.js-data/ita -name 'ita.traineddata.gz' 2>/dev/null | head -1)
+          if [ -n "$IT" ]; then cp "$IT" www/vendor/lang/ita.traineddata.gz; else echo "AVISO: sin ita.traineddata.gz (la app lo descargará online)"; fi
+          du -sh www; ls www/vendor www/vendor/core www/vendor/lang || true
 
       - name: Crear proyecto Android con permiso de cámara e icono
         run: |
@@ -52,7 +60,9 @@ jobs:
           for s in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do
             d=${s%%:*}; px=${s##*:}
             mkdir -p $R/mipmap-$d
-            convert icon-512.png -resize ${px}x${px} $R/mipmap-$d/ic_launcher.png
+            ( magick icon-512.png -resize ${px}x${px} $R/mipmap-$d/ic_launcher.png \
+              || convert icon-512.png -resize ${px}x${px} $R/mipmap-$d/ic_launcher.png ) 2>/dev/null \
+              || cp icon-512.png $R/mipmap-$d/ic_launcher.png
             cp $R/mipmap-$d/ic_launcher.png $R/mipmap-$d/ic_launcher_round.png
             cp $R/mipmap-$d/ic_launcher.png $R/mipmap-$d/ic_launcher_foreground.png
           done
