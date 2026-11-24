@@ -170,7 +170,7 @@ textarea{width:100%;min-height:180px;margin-top:10px;border:1px solid var(--line
   function show(){var b=document.getElementById("errbox");if(!b)return;b.style.display="block";b.textContent="Errore / Error: "+errs.join(" | ")+" — Ricarica la pagina / Recarga la página.";}
   window.addEventListener("error",function(e){
     var t=e.target;
-    if(t&&t.tagName==="SCRIPT"){errs.push("no se pudo cargar "+(t.getAttribute("src")||""));}
+    if(t&&t.tagName==="SCRIPT"){var sr=t.getAttribute("src")||"";if(sr.indexOf("vendor/")===0)return;errs.push("no se pudo cargar "+sr);}
     else errs.push((e.message||"error")+" ("+String(e.filename||"").split("/").pop()+":"+(e.lineno||"")+")");
     show();
   },true);

@@ -200,7 +200,7 @@ function getWorker() {
         return await withTimeout(create({ logger: logger, workerPath: abs("vendor/worker.min.js"), corePath: abs("vendor/core/"), langPath: abs("vendor/lang/") }), 25000);
       } catch (e) { /* alternativa: descargar el motor online */ }
     }
-    return await withTimeout(create({ logger: logger }), 120000);
+    return await withTimeout(create({ logger: logger, langPath: "https://tessdata.projectnaptha.com/4.0.0_best_int" }), 120000);
   }).catch(function (e) { workerP = null; throw e; });
   return workerP;
 }
@@ -323,6 +323,7 @@ async function readFiles(files, psm) {
   return texts.join("\n");
 }
 
+function score(r) { return r.keyFound * 10 + Object.keys(r.v).length; }
 async function handleFiles(fl) {
   var files = Array.prototype.slice.call(fl || []);
   if (!files.length) return;
@@ -332,11 +333,11 @@ async function handleFiles(fl) {
     var txt = await readFiles(files, 6);
     if (mine !== runId) return;
     var res = BustaParser.parse(txt);
-    if (res.keyFound < 2 && files.some(function (f) { return !/pdf/i.test(f.type); })) {
+    if (res.keyFound < 5 && files.some(function (f) { return !/pdf/i.test(f.type); })) {
       setStatus(t("st_ocr2"), 0.2);
       var txt2 = await readFiles(files, 3), res2 = BustaParser.parse(txt2);
       if (mine !== runId) return;
-      if (res2.keyFound > res.keyFound) { res = res2; txt = txt2; }
+      if (score(res2) > score(res)) { res = res2; txt = txt2; }
     }
     setStatus(t("st_an"), 1);
     finish(txt, res);
@@ -395,7 +396,7 @@ function render(r) {
     h += "</div>";
   } else if (per) h += '<div class="hero"><div class="per">' + esc(per) + "</div></div>";
 
-  if (r.keyFound < 2) h += '<div class="card"><div class="note warn"><b>' + esc(t("low_t")) + "</b><br>" + esc(t("low_p")) + "</div></div>";
+  if (r.keyFound < 4) h += '<div class="card"><div class="note warn"><b>' + esc(t("low_t")) + "</b><br>" + esc(t("low_p")) + "</div></div>";
 
   /* acciones */
   h += '<div class="acts"><button class="btn small primary" id="bAgain">' + esc(t("again")) + '</button><button class="btn small" id="bCopy">' + esc(t("copy")) + "</button>" +
