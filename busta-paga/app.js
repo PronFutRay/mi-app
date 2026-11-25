@@ -54,6 +54,16 @@ it: {
   b_net: "Dai {l} € lordi ricevi {n} € ({p}%).", b_ferie: "Hai ancora {n} {u} di ferie da usare.", b_rol: "Permessi ROL ancora disponibili: {n} {u}.",
   b_pens: "Questo mese per la tua pensione: circa {t} € (tu {a} € + azienda {b} €).", b_pens_est: "(stima)",
   nf_netto: "netto", nf_lordo: "lordo", nf_tratt: "totale trattenute", nf_inps: "contributi INPS", nf_irpef: "IRPEF", nf_ferie: "ferie e permessi",
+  priv_ai: "Lettura normale: tutto resta sul tuo telefono. Lettura intelligente: la busta viene inviata al servizio di IA solo quando lo scegli tu.",
+  ai_first_t: "Lettura intelligente (IA)", ai_first_p: "Consigliata per buste difficili, scritte male o piene di codici: legge e spiega ogni voce.",
+  ai_btn: "✨ Lettura intelligente", ai_tag: "Letta con IA", ai_low: "Prova la lettura intelligente: capisce anche buste scritte male o in codice.",
+  ai_c_t: "Lettura intelligente", ai_c_p: "Per leggerla, la busta viene inviata in modo protetto al nostro server e al servizio di IA Claude (Anthropic). Noi non la conserviamo. Se vuoi, prima copri nome, codice fiscale e IBAN. Continuare?",
+  ai_ok: "Sì, continua", st_prep: "Preparo le pagine…", st_ai: "L'IA sta leggendo la tua busta…",
+  ai_err: "La lettura intelligente non è riuscita. Riprova tra poco.", ai_limit: "Hai raggiunto il limite di letture intelligenti di oggi. Riprova domani.",
+  ai_big: "File troppo grande: prova con meno pagine o con una foto.", ai_not: "Questo documento non sembra una busta paga.",
+  sec_codes: "Codici e abbreviazioni spiegati", codes_p: "Voci scritte in codice e cosa significano. Quelle «incerte» chiedile all'ufficio paghe.",
+  cf_high: "sicuro", cf_medium: "probabile", cf_low: "incerto", sec_warn: "Da controllare", sec_more: "Altre voci spiegate",
+  lang_load: "Traduco l'app…", lang_err: "Traduzione non disponibile ora. Riprova più tardi.",
   sum_title: "Riepilogo busta paga"
 },
 es: {
@@ -105,37 +115,206 @@ es: {
   b_net: "De {l} € brutos recibes {n} € ({p} %).", b_ferie: "Aún tienes {n} {u} de vacaciones por usar.", b_rol: "Permisos ROL aún disponibles: {n} {u}.",
   b_pens: "Este mes para tu pensión: unos {t} € (tú {a} € + empresa {b} €).", b_pens_est: "(estimación)",
   nf_netto: "neto", nf_lordo: "bruto", nf_tratt: "total descuentos", nf_inps: "cotización INPS", nf_irpef: "IRPEF", nf_ferie: "vacaciones y permisos",
+  priv_ai: "Lectura normal: todo se queda en tu móvil. Lectura inteligente: la busta se envía al servicio de IA solo cuando tú lo eliges.",
+  ai_first_t: "Lectura inteligente (IA)", ai_first_p: "Recomendada para bustas difíciles, mal escritas o llenas de códigos: lee y explica cada línea.",
+  ai_btn: "✨ Lectura inteligente", ai_tag: "Leída con IA", ai_low: "Prueba la lectura inteligente: entiende también bustas mal escritas o en código.",
+  ai_c_t: "Lectura inteligente", ai_c_p: "Para leerla, la busta se envía de forma protegida a nuestro servidor y al servicio de IA Claude (Anthropic). Nosotros no la guardamos. Si quieres, antes tapa nombre, codice fiscale e IBAN. ¿Continuar?",
+  ai_ok: "Sí, continuar", st_prep: "Preparo las páginas…", st_ai: "La IA está leyendo tu busta…",
+  ai_err: "La lectura inteligente no ha funcionado. Inténtalo de nuevo en un rato.", ai_limit: "Has llegado al límite de lecturas inteligentes de hoy. Vuelve a intentarlo mañana.",
+  ai_big: "Archivo demasiado grande: prueba con menos páginas o con una foto.", ai_not: "Este documento no parece una busta paga.",
+  sec_codes: "Códigos y abreviaturas explicados", codes_p: "Líneas escritas en código y lo que significan. Las «inciertas», pregúntalas a la oficina de nóminas.",
+  cf_high: "seguro", cf_medium: "probable", cf_low: "incierto", sec_warn: "Para revisar", sec_more: "Otras líneas explicadas",
+  lang_load: "Traduciendo la app…", lang_err: "Traducción no disponible ahora. Inténtalo más tarde.",
   sum_title: "Resumen de la busta paga"
 }};
 
-var LANG = "it";
-try { LANG = localStorage.getItem("bc.lang") || ((navigator.language || "it").slice(0, 2) === "es" ? "es" : "it"); } catch (e) {}
-function t(k) { var x = T[LANG][k]; return x !== undefined ? x : (T.it[k] !== undefined ? T.it[k] : k); }
-function fill(s, o) { return s.replace(/\{(\w+)\}/g, function (_, k) { return o[k]; }); }
+/* ---- idiomas: IT y ES incluidos; los demás los traduce la IA una vez y se guardan en el móvil ---- */
+var CFG = window.BC_CONFIG || {};
+var AI = String(CFG.AI_URL || "").trim().replace(/\/+$/, "");
+var UI_VER = "v1";
+var CODES = ["it", "es", "en", "fr", "de", "pt", "ro", "sq", "uk", "ru", "pl", "bg", "cs", "sk", "hu", "hr", "sr", "bs", "mk", "sl", "el",
+  "nl", "sv", "da", "no", "fi", "lt", "lv", "et", "tr", "ar", "fa", "he", "ur", "hi", "pa", "bn", "ta", "si", "ne", "ml", "te", "gu", "mr",
+  "zh", "ja", "ko", "vi", "th", "id", "ms", "tl", "am", "ti", "so", "sw", "ha", "yo", "ig", "wo", "ka", "hy", "az", "uz", "kk"];
+var RTL = ["ar", "fa", "he", "ur"];
+function nativeName(c) {
+  try { var n = new Intl.DisplayNames([c], { type: "language" }).of(c); return n && n !== c ? n.charAt(0).toLocaleUpperCase(c) + n.slice(1) : c.toUpperCase(); } catch (e) { return c.toUpperCase(); }
+}
+function flatIt() { var o = {}; Object.keys(T.it).forEach(function (k) { var x = T.it[k]; if (Array.isArray(x)) x.forEach(function (s, i) { o[k + "__" + i] = s; }); else o[k] = x; }); return o; }
+function unflat(o) {
+  var r = {};
+  Object.keys(o).forEach(function (k) { var m = k.match(/^(.+)__(\d+)$/); if (m && Array.isArray(T.it[m[1]])) { (r[m[1]] = r[m[1]] || T.it[m[1]].slice())[+m[2]] = o[k]; } else r[k] = o[k]; });
+  return r;
+}
+function cachedUi(l) { try { var s = localStorage.getItem("bc.ui." + UI_VER + "." + l); return s ? JSON.parse(s) : null; } catch (e) { return null; } }
+
+var LANG = "", wantLang = "";
+try { LANG = localStorage.getItem("bc.lang") || ""; } catch (e) {}
+if (!LANG) { var nl = (navigator.language || "it").slice(0, 2).toLowerCase(); LANG = T[nl] ? nl : "it"; }
+if (!T[LANG]) { var cu = cachedUi(LANG); if (cu) T[LANG] = unflat(cu); else { wantLang = LANG; LANG = "it"; } }
+function t(k) { var d = T[LANG] || T.it, x = d[k]; return x !== undefined ? x : (T.it[k] !== undefined ? T.it[k] : k); }
+function fill(s, o) { return s.replace(/\{(\w+)\}/g, function (_, k) { return o[k] != null ? o[k] : ""; }); }
 function esc(x) { return String(x).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
 
-var LOC = function () { return LANG === "es" ? "es-ES" : "it-IT"; };
+var LOC = function () { return LANG === "es" ? "es-ES" : LANG === "it" ? "it-IT" : LANG + "-u-nu-latn"; };
 function num(n, d) { return Number(n).toLocaleString(LOC(), { minimumFractionDigits: d, maximumFractionDigits: d, useGrouping: "always" }); }
 function eur(n) { return num(n, 2) + " €"; }
 function qty(n, u) { var d = Math.abs(n - Math.round(n)) < 0.005 ? 0 : 2; return num(n, d) + (u ? " " + t(u) : ""); }
 
-var last = null, lastText = "";
+var last = null, lastText = "", lastFiles = null, lastPw = null;
 
 /* ============================ IDIOMA ============================ */
 function applyLang() {
   document.documentElement.lang = LANG;
-  ["tag", "up_title", "up_sub", "bPhoto", "bFile", "drop", "bDemo", "priv", "prog_t", "disc", "pw_t", "pw_p"].forEach(function (k) { var e = $(k); if (e) e.textContent = t(k); });
+  document.documentElement.dir = RTL.indexOf(LANG) >= 0 ? "rtl" : "ltr";
+  ["tag", "up_title", "up_sub", "bPhoto", "bFile", "drop", "bDemo", "priv", "prog_t", "disc", "pw_t", "pw_p", "ai_first_t", "ai_first_p", "ai_c_t", "ai_c_p"].forEach(function (k) { var e = $(k); if (e) e.textContent = t(k); });
+  if (AI) $("priv").textContent = t("priv_ai");
+  $("aiBox").classList.toggle("hidden", !AI);
   $("bCancel").textContent = t("pw_no");
   $("pwOk").textContent = t("pw_ok"); $("pwNo").textContent = t("pw_no");
-  $("l-it").classList.toggle("on", LANG === "it"); $("l-es").classList.toggle("on", LANG === "es");
+  $("aiOk").textContent = t("ai_ok"); $("aiNo").textContent = t("pw_no");
+  $("langSel").value = LANG;
   document.title = "Busta Chiara · " + t("tag");
   if (last) render(last);
 }
-function setLang(l) { LANG = l; try { localStorage.setItem("bc.lang", l); } catch (e) {} applyLang(); }
-$("l-it").onclick = function () { setLang("it"); };
-$("l-es").onclick = function () { setLang("es"); };
+function fillLangSel() {
+  var codes = AI ? CODES : CODES.filter(function (c) { return T[c] || cachedUi(c); });
+  $("langSel").innerHTML = codes.map(function (c) { return '<option value="' + c + '">' + esc(nativeName(c)) + "</option>"; }).join("");
+  $("langSel").value = LANG;
+}
+var langBusy = false;
+async function translateUi(l) {
+  var flat = flatIt(), keys = Object.keys(flat), chunks = [], out = {};
+  for (var i = 0; i < keys.length; i += 60) { var o = {}; keys.slice(i, i + 60).forEach(function (k) { o[k] = flat[k]; }); chunks.push(o); }
+  var res = await Promise.all(chunks.map(function (c) { return aiPost({ action: "ui", lang: l, strings: c }, 120000); }));
+  res.forEach(function (r) { Object.assign(out, r.strings || {}); });
+  try { localStorage.setItem("bc.ui." + UI_VER + "." + l, JSON.stringify(out)); } catch (e) {}
+  return out;
+}
+async function setLang(l) {
+  if (!T[l]) {
+    var c = cachedUi(l);
+    if (c) T[l] = unflat(c);
+    else if (AI) {
+      if (langBusy) return;
+      langBusy = true; $("langSel").disabled = true; toast(t("lang_load") + " " + nativeName(l), 120000);
+      try { T[l] = unflat(await translateUi(l)); }
+      catch (e) { toast(t("lang_err")); $("langSel").value = LANG; return; }
+      finally { langBusy = false; $("langSel").disabled = false; }
+      hideToast();
+    } else { $("langSel").value = LANG; return; }
+  }
+  LANG = l; try { localStorage.setItem("bc.lang", l); } catch (e) {} applyLang();
+}
+$("langSel").onchange = function () { setLang(this.value); };
 
-function toast(m) { var e = $("toast"); e.textContent = m; e.classList.add("show"); setTimeout(function () { e.classList.remove("show"); }, 2200); }
+var toastTm = null;
+function toast(m, ms) { var e = $("toast"); e.textContent = m; e.classList.add("show"); clearTimeout(toastTm); toastTm = setTimeout(hideToast, ms || 2600); }
+function hideToast() { clearTimeout(toastTm); $("toast").classList.remove("show"); }
+
+/* ============================ LECTURA INTELIGENTE (IA) ============================ */
+async function aiPost(body, ms) {
+  var ctl = window.AbortController ? new AbortController() : null;
+  var tm = setTimeout(function () { if (ctl) ctl.abort(); }, ms);
+  try {
+    var resp = await fetch(AI, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal: ctl ? ctl.signal : undefined });
+    var data = await resp.json().catch(function () { return null; });
+    if (!data || !data.ok) throw new Error((data && data.error) || "http" + resp.status);
+    return data;
+  } finally { clearTimeout(tm); }
+}
+function aiConsent() {
+  try { if (localStorage.getItem("bc.ai.ok") === "1") return Promise.resolve(true); } catch (e) {}
+  return new Promise(function (res) {
+    $("aiModal").classList.add("show");
+    $("aiOk").onclick = function () { $("aiModal").classList.remove("show"); try { localStorage.setItem("bc.ai.ok", "1"); } catch (e) {} res(true); };
+    $("aiNo").onclick = function () { $("aiModal").classList.remove("show"); res(false); };
+  });
+}
+function isPdfFile(f) { return /pdf/i.test(f.type) || /\.pdf$/i.test(f.name || ""); }
+function jpeg(cv) { return cv.toDataURL("image/jpeg", 0.85).split(",")[1]; }
+function fileB64(f) { return new Promise(function (res, rej) { var r = new FileReader(); r.onload = function () { res(String(r.result).split(",")[1]); }; r.onerror = rej; r.readAsDataURL(f); }); }
+function whiteCanvas(w, h) { var cv = document.createElement("canvas"); cv.width = Math.round(w); cv.height = Math.round(h); var x = cv.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0, 0, cv.width, cv.height); return cv; }
+async function filesForAi(files) {
+  var out = [];
+  for (var f of files) {
+    if (out.length >= 4) break;
+    if (isPdfFile(f)) {
+      var lib = await loadPdf(), asked = false;
+      var task = lib.getDocument({ data: await f.arrayBuffer(), password: lastPw || undefined });
+      task.onPassword = function (cb, reason) { asked = true; askPassword(reason === 2).then(function (pw) { if (pw === null) task.destroy(); else { lastPw = pw; cb(pw); } }); };
+      var pdf = await task.promise;
+      if (!asked && !lastPw && f.size < 4.5 * 1024 * 1024 && pdf.numPages <= 6) { out.push({ type: "application/pdf", data: await fileB64(f) }); continue; }
+      for (var p = 1; p <= pdf.numPages && out.length < 4; p++) {
+        var page = await pdf.getPage(p), vp0 = page.getViewport({ scale: 1 });
+        var vp = page.getViewport({ scale: Math.min(3, 2000 / Math.max(vp0.width, vp0.height)) });
+        var cv = whiteCanvas(vp.width, vp.height);
+        await page.render({ canvas: cv, canvasContext: cv.getContext("2d"), viewport: vp }).promise;
+        out.push({ type: "image/jpeg", data: jpeg(cv) });
+      }
+    } else {
+      var src; try { src = await createImageBitmap(f, { imageOrientation: "from-image" }); } catch (e) { src = await loadImage(f); }
+      var sc = Math.min(1, 2000 / Math.max(src.width, src.height)), c2 = whiteCanvas(src.width * sc, src.height * sc);
+      c2.getContext("2d").drawImage(src, 0, 0, c2.width, c2.height);
+      out.push({ type: "image/jpeg", data: jpeg(c2) });
+    }
+  }
+  return out;
+}
+function pos(x) { return x === -1 ? null : x; }
+function fromAi(a) {
+  var v = {}, fer = {}, otherLeave = [], more = [];
+  var lists = { straord: [], assenze: [], fondo: [], tfr: [], r13: [], anf: [], bonus: [], tratt: [] };
+  (a.amounts || []).forEach(function (x) { if (v[x.key] == null) v[x.key] = x.value; });
+  (a.leave || []).forEach(function (l) {
+    var o = { u: l.unit, prev: pos(l.prev), mat: pos(l.accrued), god: pos(l.taken), sal: pos(l.balance), label: l.label };
+    if (l.type !== "other" && !fer[l.type]) fer[l.type] = o; else otherLeave.push(o);
+  });
+  var G = { overtime: "straord", absence: "assenze", bonus: "bonus", deduction: "tratt", tfr_month: "tfr", tfr_total: "tfr", pension_fund: "fondo",
+            thirteenth: "r13", fourteenth: "r13", family_allowance: "anf" };
+  (a.lines || []).forEach(function (l) {
+    var hasQ = l.quantity >= 0 && l.unit !== "none", hasA = l.amount >= 0;
+    var nums = hasQ ? (hasA ? [l.quantity, l.amount] : [l.quantity]) : (hasA ? [l.amount] : []);
+    var it = { label: l.label || l.original, nums: nums, u: hasQ ? l.unit : "", ex: l.explanation, orig: l.original,
+               line: l.group === "tfr_total" ? "FONDO" : l.group === "fourteenth" ? "QUATTORDICESIMA" : "" };
+    var key = G[l.group];
+    if (!key) { more.push(it); return; }
+    if (["fondo", "tfr", "r13", "anf"].indexOf(key) >= 0 && !hasA) { more.push(it); return; }
+    if (!nums.length) { more.push(it); return; }
+    lists[key].push(it);
+  });
+  var check = null;
+  if (v.lordo != null && v.tratt != null && v.netto != null) { var d = v.lordo - v.tratt - v.netto; check = { diff: Math.round(d * 100) / 100, ok: Math.abs(d) <= 1.5 }; }
+  var keyFound = ["netto", "lordo", "tratt", "inps", "irpef_netta"].filter(function (k) { return v[k] != null; }).length + (fer.ferie || fer.rol || fer.exf ? 1 : 0);
+  return { period: a.period_month ? { m: a.period_month, y: a.period_year || "" } : null, info: { livello: a.level, qualifica: a.role, ccnl: a.ccnl },
+           v: v, ferie: fer, ferieMese: [], rolMese: [], lists: lists, check: check, keyFound: keyFound,
+           ai: { summary: a.summary || [], warnings: a.warnings || [], decoded: a.decoded || [], more: more, leave: otherLeave, payslip: a.is_payslip !== false } };
+}
+async function runAi(files, hint) {
+  if (!AI || !files || !files.length) return;
+  if (!(await aiConsent())) return;
+  var mine = ++runId, fake = null; my = mine;
+  $("out").classList.add("hidden"); $("upload").classList.add("hidden"); showProg(true); setStatus(t("st_prep"), 0.05);
+  try {
+    var payload = await filesForAi(files);
+    if (mine !== runId) return;
+    var k = 0.2; setStatus(t("st_ai"), k);
+    fake = setInterval(function () { k = Math.min(0.95, k + (0.95 - k) * 0.035); if (mine === runId) setStatus(t("st_ai"), k); }, 700);
+    var data = await aiPost({ action: "read", lang: LANG, files: payload, text: hint ? anonymize(hint).slice(0, 12000) : "" }, 170000);
+    clearInterval(fake);
+    if (mine !== runId) return;
+    var res = fromAi(data.result);
+    setStatus(t("st_an"), 1);
+    finish(hint || lastText, res);
+    if (!res.ai.payslip) toast(t("ai_not"), 4000);
+  } catch (e) {
+    clearInterval(fake);
+    if (mine !== runId) return;
+    showProg(false);
+    if (last) $("out").classList.remove("hidden"); else $("upload").classList.remove("hidden");
+    var code = e && e.message ? e.message : "";
+    toast(code === "limit" || code === "limit_global" ? t("ai_limit") : code === "too_big" ? t("ai_big") : t("ai_err") + (code ? " [" + code.slice(0, 40) + "]" : ""), 5000);
+  }
+}
 
 /* ============================ MOTORES (PDF + OCR) ============================ */
 var LIBS = {
@@ -294,7 +473,7 @@ async function extractPdf(file, status, psm) {
   var task = lib.getDocument({ data: buf });
   var tries = 0;
   task.onPassword = function (cb, reason) {
-    askPassword(reason === 2 || tries++ > 0).then(function (pw) { if (pw === null) { task.destroy(); } else cb(pw); });
+    askPassword(reason === 2 || tries++ > 0).then(function (pw) { if (pw === null) { task.destroy(); } else { lastPw = pw; cb(pw); } });
   };
   var pdf = await task.promise;
   var out = [], n = Math.min(pdf.numPages, 4);
@@ -346,6 +525,8 @@ function score(r) { return r.keyFound * 10 + Object.keys(r.v).length; }
 async function handleFiles(fl) {
   var files = Array.prototype.slice.call(fl || []);
   if (!files.length) return;
+  lastFiles = files; lastPw = null;
+  if (AI && $("aiFirst").checked) { last = null; return runAi(files, ""); }
   var mine = ++runId; my = mine;
   $("out").classList.add("hidden"); $("upload").classList.add("hidden"); showProg(true); setStatus(t("st_lib"), 0.03);
   try {
@@ -376,7 +557,7 @@ $("bPhoto").onclick = function () { $("fPhoto").click(); };
 $("bFile").onclick = function () { $("fFile").click(); };
 $("fPhoto").onchange = function (e) { handleFiles(e.target.files); e.target.value = ""; };
 $("fFile").onchange = function (e) { handleFiles(e.target.files); e.target.value = ""; };
-$("bDemo").onclick = function () { $("upload").classList.add("hidden"); finish(window.BP_SAMPLE, BustaParser.parse(window.BP_SAMPLE)); };
+$("bDemo").onclick = function () { lastFiles = null; $("upload").classList.add("hidden"); finish(window.BP_SAMPLE, BustaParser.parse(window.BP_SAMPLE)); };
 var dz = $("drop");
 ["dragenter", "dragover"].forEach(function (ev) { document.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.add("over"); }); });
 ["dragleave", "drop"].forEach(function (ev) { document.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.remove("over"); }); });
@@ -392,19 +573,21 @@ function section(title, inner) { return '<section class="card"><h2>' + esc(title
 function unitFromLine(line) { return /\bORE\b|\bH\b/.test(line) ? "h" : /\bGG\b|GIORN/.test(line) ? "d" : ""; }
 function itemRow(it) {
   var n = it.nums, right;
-  var u = unitFromLine(it.line);
-  if (n.length >= 2) right = qty(n[0], u) + " · " + eur(n[n.length - 1]);
+  var u = it.u !== undefined ? it.u : unitFromLine(it.line);
+  if (!n.length) right = "";
+  else if (n.length >= 2) right = qty(n[0], u) + " · " + eur(n[n.length - 1]);
   else right = u ? qty(n[0], u) : eur(n[0]);
-  return '<div class="it"><span>' + esc(it.label) + "</span><b>" + esc(right) + "</b></div>";
+  return '<div class="it"><span>' + esc(it.label) + (it.ex ? "<small>" + esc(it.ex) + "</small>" : "") + "</span><b>" + esc(right) + "</b></div>";
 }
 
 function render(r) {
   var v = r.v, h = "", i, k;
-  var per = r.period ? t("m")[r.period.m - 1] + " " + r.period.y : "";
+  var per = r.period ? (t("m")[r.period.m - 1] + " " + r.period.y).trim() : "";
+  var canAi = !!(AI && lastFiles && !r.ai);
 
   /* hero */
   if (v.netto != null || v.lordo != null) {
-    h += '<div class="hero"><div class="per">' + esc(per) + '</div><div class="row"><div><div class="l">' + esc(t("hero_net")) + '</div><div class="v">' +
+    h += '<div class="hero"><div class="per">' + esc(per) + (r.ai ? '<span class="aitag">✨ ' + esc(t("ai_tag")) + "</span>" : "") + '</div><div class="row"><div><div class="l">' + esc(t("hero_net")) + '</div><div class="v">' +
       (v.netto != null ? esc(num(v.netto, 2)) + "<small>€</small>" : "—") + "</div></div><div class=\"s\">" +
       (v.lordo != null ? '<div class="l">' + esc(t("hero_gross")) + '</div><div class="v">' + esc(eur(v.lordo)) + "</div>" : "") + "</div></div>";
     var ch = [];
@@ -415,16 +598,18 @@ function render(r) {
     h += "</div>";
   } else if (per) h += '<div class="hero"><div class="per">' + esc(per) + "</div></div>";
 
-  if (r.keyFound < 4) h += '<div class="card"><div class="note warn"><b>' + esc(t("low_t")) + "</b><br>" + esc(t("low_p")) + "</div></div>";
+  if (r.keyFound < 4 && !r.ai) h += '<div class="card"><div class="note warn"><b>' + esc(t("low_t")) + "</b><br>" + esc(t("low_p")) + "</div>" +
+    (canAi ? '<p class="muted" style="margin:12px 0 8px">' + esc(t("ai_low")) + '</p><button class="btn ai" id="bAi2">' + esc(t("ai_btn")) + "</button>" : "") + "</div>";
 
   /* acciones */
-  h += '<div class="acts"><button class="btn small primary" id="bAgain">' + esc(t("again")) + '</button><button class="btn small" id="bCopy">' + esc(t("copy")) + "</button>" +
+  h += '<div class="acts">' + (canAi ? '<button class="btn small ai" id="bAi">' + esc(t("ai_btn")) + "</button>" : "") + '<button class="btn small primary" id="bAgain">' + esc(t("again")) + '</button><button class="btn small" id="bCopy">' + esc(t("copy")) + "</button>" +
        (navigator.share ? '<button class="btn small" id="bShare">' + esc(t("share")) + "</button>" : "") +
        (window.BC_MONEY ? '<button class="btn small" id="bPdf">' + esc(window.BC_MONEY.label()) + "</button>" : "") + "</div>";
 
   /* en breve */
-  var brief = buildBrief(r);
+  var brief = r.ai && r.ai.summary.length ? r.ai.summary : buildBrief(r);
   if (brief.length) h += section(t("brief"), '<ul class="brief">' + brief.map(function (b) { return "<li>" + esc(b) + "</li>"; }).join("") + "</ul>");
+  if (r.ai && r.ai.warnings.length) h += section(t("sec_warn"), r.ai.warnings.map(function (w) { return '<div class="note warn">' + esc(w) + "</div>"; }).join(""));
 
   /* adónde va */
   if (v.lordo && v.netto != null) {
@@ -450,6 +635,11 @@ function render(r) {
     var avail = (o.prev || 0) + (o.mat || 0), pb = "";
     if (o.god != null && avail > 0) pb = '<div class="pb"><i style="width:' + Math.min(100, o.god / avail * 100).toFixed(0) + '%"></i></div><div class="pl">' + esc(qty(o.god, u) + " " + t("used_of") + " " + qty(avail, u)) + "</div>";
     fh += '<div class="fc"><div class="t">' + esc(t(key + "_t")) + " <span class=\"muted\">(" + esc(t(u)) + ")</span></div><div class=\"hd\">" + esc(t(key + "_h")) + '</div><div class="g">' + cells + "</div>" + pb + "</div>";
+  });
+  if (r.ai) r.ai.leave.forEach(function (o) {
+    var cells = "";
+    ["prev", "mat", "god", "sal"].forEach(function (q) { if (o[q] != null) cells += '<div class="' + (q === "sal" ? "sal" : "") + '"><b>' + esc(qty(o[q])) + "</b><span>" + esc(t(q)) + "</span></div>"; });
+    if (cells) fh += '<div class="fc"><div class="t">' + esc(o.label || "—") + ' <span class="muted">(' + esc(t(o.u || "d")) + ')</span></div><div class="g">' + cells + "</div></div>";
   });
   if (fh) h += section(t("sec_ferie"), fh);
 
@@ -491,6 +681,10 @@ function render(r) {
   if (r.lists.bonus.length) ol += '<div class="lh">' + esc(t("bonus")) + " — " + esc(t("bonus_h")) + '</div><div class="list">' + r.lists.bonus.map(itemRow).join("") + "</div>";
   if (r.lists.tratt.length) ol += '<div class="lh">' + esc(t("tratt")) + " — " + esc(t("tratt_h")) + '</div><div class="list">' + r.lists.tratt.map(itemRow).join("") + "</div>";
   if (oh || ol) h += section(t("sec_other"), (oh ? '<div class="grid">' + oh + "</div>" : "") + ol);
+  if (r.ai && r.ai.more.length) h += section(t("sec_more"), '<div class="list">' + r.ai.more.map(itemRow).join("") + "</div>");
+  if (r.ai && r.ai.decoded.length) h += section(t("sec_codes"), '<p class="muted">' + esc(t("codes_p")) + "</p>" + r.ai.decoded.map(function (d) {
+    return '<div class="dec"><code>' + esc(d.original) + '</code><span class="cf ' + esc(d.confidence) + '">' + esc(t("cf_" + d.confidence)) + "</span><p>" + esc(d.meaning) + "</p></div>";
+  }).join(""));
 
   /* control */
   if (r.check) h += section(t("sec_check"), '<div class="note ' + (r.check.ok ? "ok" : "warn") + '">' + esc(r.check.ok ? t("chk_ok") : fill(t("chk_bad"), { x: num(Math.abs(r.check.diff), 2) })) + "</div>");
@@ -507,6 +701,7 @@ function render(r) {
   var out = $("out"); out.innerHTML = h; out.classList.remove("hidden");
   $("rawtxt").value = lastText;
   $("bAgain").onclick = reset;
+  ["bAi", "bAi2"].forEach(function (id) { if ($(id)) $(id).onclick = function () { runAi(lastFiles, lastText); }; });
   $("bCopy").onclick = copySummary;
   if ($("bPdf")) $("bPdf").onclick = function () { window.BC_MONEY.report(); };
   if ($("bShare")) $("bShare").onclick = function () { navigator.share({ title: t("sum_title"), text: summaryText(r) }).catch(function () {}); };
@@ -534,6 +729,7 @@ function summaryText(r) {
   if (v.inps != null) L.push(t("inps") + ": " + eur(v.inps));
   if (v.irpef_netta != null) L.push(t("irpef_netta") + ": " + eur(v.irpef_netta));
   ["ferie", "rol"].forEach(function (key) { var o = r.ferie[key]; if (o && o.sal != null) L.push(t(key + "_t") + " – " + t("sal") + ": " + qty(o.sal, o.u)); });
+  if (r.ai) r.ai.summary.forEach(function (s) { L.push("• " + s); });
   return L.join("\n");
 }
 function anonymize(txt) {
@@ -556,7 +752,9 @@ function copySummary() {
   });
 }
 
+fillLangSel();
 applyLang();
+if (wantLang && AI) setLang(wantLang);
 window.__bcReady = true;
 window.__BC = { handleFiles: handleFiles, finish: finish, lang: function () { return LANG; }, toast: toast, shareSummary: function () {
   if (!last) return;

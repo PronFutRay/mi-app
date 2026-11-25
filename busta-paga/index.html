@@ -29,8 +29,24 @@ header{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;pa
 .brand h1{font-size:20px;letter-spacing:.2px}
 .brand p{font-size:12.5px;opacity:.78}
 .lang{display:flex;background:rgba(255,255,255,.12);border-radius:99px;padding:3px}
-.lang button{border:0;background:transparent;color:#fff;font-weight:700;font-size:12.5px;padding:6px 12px;border-radius:99px;cursor:pointer;opacity:.75}
-.lang button.on{background:#fff;color:var(--navy);opacity:1}
+.lang{align-items:center;gap:4px;color:#fff;padding:3px 4px 3px 10px}
+.lang select{border:0;background:transparent;color:#fff;font-weight:700;font-size:13px;padding:6px 4px;max-width:132px;cursor:pointer;font-family:inherit}
+.lang select option{color:#111;background:#fff}
+.aibox{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:14px;cursor:pointer;font-size:13.5px}
+.aibox input{margin-top:3px;width:18px;height:18px;accent-color:var(--brand);flex:0 0 auto}
+.aibox b{display:block;font-size:14.5px}
+.aibox span{color:var(--muted)}
+.btn.ai{background:linear-gradient(135deg,#6d28d9,#2563eb);color:#fff;border:0}
+.aitag{display:inline-block;font-size:11.5px;font-weight:700;background:rgba(255,255,255,.18);border-radius:99px;padding:3px 9px;margin-left:6px;vertical-align:middle}
+.dec{border-bottom:1px solid var(--line);padding:10px 0}
+.dec:last-child{border-bottom:0}
+.dec code{font-size:12.5px;background:var(--line);border-radius:6px;padding:2px 6px;word-break:break-word}
+.dec p{font-size:14px;margin-top:6px}
+.cf{font-size:11px;font-weight:700;border-radius:99px;padding:2px 8px;margin-left:6px;white-space:nowrap}
+.cf.high{background:rgba(18,163,107,.14);color:var(--ok)}.cf.medium{background:rgba(59,130,246,.14);color:#2563eb}.cf.low{background:rgba(199,119,0,.15);color:var(--warn)}
+.it small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
+[dir=rtl] .hero .s{text-align:left}
+[dir=rtl] .list .it b{text-align:left}
 main{margin-top:-54px;padding:0 14px}
 .card{background:var(--card);border-radius:18px;box-shadow:var(--shadow);padding:18px;margin-bottom:14px}
 h2{font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:700;margin-bottom:12px}
@@ -124,7 +140,7 @@ textarea{width:100%;min-height:180px;margin-top:10px;border:1px solid var(--line
       <div class="logo"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/><path d="M9 13h7M9 17h5"/></svg></div>
       <div><h1>Busta Chiara</h1><p id="tag"></p></div>
     </div>
-    <div class="lang" role="group" aria-label="Lingua / Idioma"><button id="l-it">IT</button><button id="l-es">ES</button></div>
+    <label class="lang"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg><select id="langSel" aria-label="Lingua / Language"></select></label>
   </div>
 </header>
 
@@ -141,6 +157,7 @@ textarea{width:100%;min-height:180px;margin-top:10px;border:1px solid var(--line
     <div class="drop" id="drop"></div>
     <button class="link" id="bDemo"></button>
     <div class="priv"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span id="priv"></span></div>
+    <label class="aibox hidden" id="aiBox"><input type="checkbox" id="aiFirst"><div><b id="ai_first_t"></b><span id="ai_first_p"></span></div></label>
     <input id="fPhoto" type="file" accept="image/*" capture="environment" class="hidden">
     <input id="fFile" type="file" accept="image/*,application/pdf,.pdf" multiple class="hidden">
   </section>
@@ -162,6 +179,12 @@ textarea{width:100%;min-height:180px;margin-top:10px;border:1px solid var(--line
     <h3 id="pw_t"></h3><p id="pw_p"></p>
     <input id="pwIn" type="password" autocomplete="off" autocapitalize="off">
     <div class="btns"><button class="btn small" id="pwNo"></button><button class="btn primary small" id="pwOk"></button></div>
+  </div>
+</div>
+<div class="modal" id="aiModal">
+  <div class="box">
+    <h3 id="ai_c_t"></h3><p id="ai_c_p"></p>
+    <div class="btns"><button class="btn small" id="aiNo"></button><button class="btn primary small" id="aiOk"></button></div>
   </div>
 </div>
 <div class="toast" id="toast"></div>
