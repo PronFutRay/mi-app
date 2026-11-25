@@ -33,7 +33,7 @@ jobs:
           mkdir -p _site/gpl-calc-it
           cp gpl-calc-it/index.html _site/gpl-calc-it/
           mkdir -p _site/busta-paga
-          cp busta-paga/index.html busta-paga/app.js busta-paga/parser.js busta-paga/sample.js busta-paga/manifest.json busta-paga/icon-192.png busta-paga/icon-512.png _site/busta-paga/
+          cp busta-paga/index.html busta-paga/app.js busta-paga/parser.js busta-paga/sample.js busta-paga/config.js busta-paga/money.js busta-paga/manifest.json busta-paga/icon-192.png busta-paga/icon-512.png _site/busta-paga/
           mkdir -p _site/busta-paga/vendor/lang
           cp busta-paga/vendor/lang/ita.traineddata.gz _site/busta-paga/vendor/lang/
       - uses: actions/upload-pages-artifact@v3

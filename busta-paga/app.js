@@ -407,7 +407,8 @@ function render(r) {
 
   /* acciones */
   h += '<div class="acts"><button class="btn small primary" id="bAgain">' + esc(t("again")) + '</button><button class="btn small" id="bCopy">' + esc(t("copy")) + "</button>" +
-       (navigator.share ? '<button class="btn small" id="bShare">' + esc(t("share")) + "</button>" : "") + "</div>";
+       (navigator.share ? '<button class="btn small" id="bShare">' + esc(t("share")) + "</button>" : "") +
+       (window.BC_MONEY ? '<button class="btn small" id="bPdf">' + esc(window.BC_MONEY.label()) + "</button>" : "") + "</div>";
 
   /* en breve */
   var brief = buildBrief(r);
@@ -495,6 +496,7 @@ function render(r) {
   $("rawtxt").value = lastText;
   $("bAgain").onclick = reset;
   $("bCopy").onclick = copySummary;
+  if ($("bPdf")) $("bPdf").onclick = function () { window.BC_MONEY.report(); };
   if ($("bShare")) $("bShare").onclick = function () { navigator.share({ title: t("sum_title"), text: summaryText(r) }).catch(function () {}); };
   $("bReparse").onclick = function () { lastText = $("rawtxt").value; last = BustaParser.parse(lastText); render(last); window.scrollTo(0, 0); };
 }
@@ -531,5 +533,8 @@ function copySummary() {
 
 applyLang();
 window.__bcReady = true;
-window.__BC = { handleFiles: handleFiles, finish: finish };
+window.__BC = { handleFiles: handleFiles, finish: finish, lang: function () { return LANG; }, toast: toast, shareSummary: function () {
+  if (!last) return;
+  if (navigator.share) navigator.share({ title: t("sum_title"), text: summaryText(last) }).catch(function () {}); else copySummary();
+} };
 })();
