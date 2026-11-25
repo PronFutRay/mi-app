@@ -193,14 +193,21 @@ function createGuarded(opts, ms) {
 function getWorker() {
   if (workerP) return workerP;
   workerP = loadScript(LIBS.tess, "Tesseract").then(async function (src) {
-    var logger = function (m) { if (m.status === "recognizing text") progressCb(m.progress); };
-    var create = function (opts) { return window.Tesseract.createWorker("ita", 1, opts); };
-    if (src.indexOf("vendor/") === 0) {
+    var attempts = [];
+    /* 1) todo local (APK) */
+    if (src.indexOf("vendor/") === 0) attempts.push({ workerPath: abs("vendor/worker.min.js"), corePath: abs("vendor/core/"), langPath: abs("vendor/lang/") });
+    /* 2) motor online + idioma italiano incluido en la app (ligero) */
+    attempts.push({ langPath: abs("vendor/lang/") });
+    /* 3) todo online */
+    attempts.push({});
+    var lastErr;
+    for (var i = 0; i < attempts.length; i++) {
       try {
-        return await withTimeout(create({ logger: logger, workerPath: abs("vendor/worker.min.js"), corePath: abs("vendor/core/"), langPath: abs("vendor/lang/") }), 25000);
-      } catch (e) { /* alternativa: descargar el motor online */ }
+        var o = Object.assign({ logger: tessLogger }, attempts[i]);
+        return await createGuarded(o, 45000);
+      } catch (e) { lastErr = e; }
     }
-    return await withTimeout(create({ logger: logger, langPath: "https://tessdata.projectnaptha.com/4.0.0_best_int" }), 120000);
+    throw lastErr || new Error("lib");
   }).catch(function (e) { workerP = null; throw e; });
   return workerP;
 }
@@ -312,7 +319,7 @@ async function readFiles(files, psm) {
       texts.push(await extractPdf(f, setStatus, psm));
     } else {
       setStatus(t("st_lib"), 0.05);
-      libCb = function (m) { if (my === runId) setStatus(t("st_lib") + " · " + m.status, 0.05 + (m.progress || 0) * 0.1); };
+      libCb = function (m) { if (my === runId) setStatus(t("st_lib"), 0.04 + (m.progress || 0) * 0.12); };
       await getWorker();
       setStatus(t("st_ocr"), 0.15);
       progressCb = function (p) { setStatus(t("st_ocr"), 0.15 + p * 0.8); };

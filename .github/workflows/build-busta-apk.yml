@@ -32,6 +32,7 @@ jobs:
         run: |
           mkdir -p www/vendor/core www/vendor/lang
           cp index.html app.js parser.js sample.js manifest.json icon-192.png icon-512.png www/
+          cp vendor/lang/ita.traineddata.gz www/vendor/lang/
 
       - name: Librerías offline PDF y OCR (opcional)
         continue-on-error: true
