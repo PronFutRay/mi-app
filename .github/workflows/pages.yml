@@ -36,6 +36,7 @@ jobs:
           cp busta-paga/index.html busta-paga/app.js busta-paga/parser.js busta-paga/sample.js busta-paga/config.js busta-paga/money.js busta-paga/manifest.json busta-paga/icon-192.png busta-paga/icon-512.png _site/busta-paga/
           mkdir -p _site/busta-paga/vendor/lang
           cp busta-paga/vendor/lang/ita.traineddata.gz _site/busta-paga/vendor/lang/
+          sed -i "s/\.js?v=[0-9]*/.js?v=${GITHUB_SHA::8}/g" _site/busta-paga/index.html
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
