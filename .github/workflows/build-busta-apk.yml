@@ -32,7 +32,7 @@ jobs:
         run: |
           mkdir -p www/vendor/core www/vendor/lang
           cp index.html app.js parser.js sample.js config.js money.js manifest.json icon-192.png icon-512.png www/
-          cp vendor/lang/ita.traineddata.gz www/vendor/lang/
+          cp -r vendor/* www/vendor/
 
       - name: Librerías offline PDF y OCR (opcional)
         continue-on-error: true
@@ -42,7 +42,6 @@ jobs:
           npm install @tesseract.js-data/ita || echo "AVISO: sin datos de idioma local"
           cd - >/dev/null
           N=/tmp/libs/node_modules
-          cp $N/pdfjs-dist/build/pdf.min.js $N/pdfjs-dist/build/pdf.worker.min.js www/vendor/ || echo "AVISO: pdf.js"
           cp $N/tesseract.js/dist/tesseract.min.js $N/tesseract.js/dist/worker.min.js www/vendor/ || echo "AVISO: tesseract"
           cp $N/tesseract.js-core/*.js www/vendor/core/ || echo "AVISO: core"
           cp $N/tesseract.js-core/*.wasm www/vendor/core/ 2>/dev/null || true

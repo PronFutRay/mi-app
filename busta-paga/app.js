@@ -168,11 +168,17 @@ function abs(p) { return new URL(p, location.href).href; }
 
 function loadPdf() {
   if (loaded.pdf) return loaded.pdf;
-  loaded.pdf = loadScript(LIBS.pdf, "pdfjsLib").then(function (src) {
-    var local = src.indexOf("vendor/") === 0;
-    window.pdfjsLib.GlobalWorkerOptions.workerSrc = local ? abs("vendor/pdf.worker.min.js") : "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
+  loaded.pdf = (async function () {
+    /* 1) pdf.js incluido en la app (mismo origen: no depende de ningún CDN) */
+    try {
+      var m = await import(abs("vendor/pdf.min.mjs"));
+      m.GlobalWorkerOptions.workerSrc = abs("vendor/pdf.worker.min.mjs");
+      return m;
+    } catch (e) { /* 2) alternativa antigua online */ }
+    await loadScript(LIBS.pdf, "pdfjsLib");
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
     return window.pdfjsLib;
-  }).catch(function (e) { loaded.pdf = null; throw e; });
+  })().catch(function (e) { loaded.pdf = null; throw e; });
   return loaded.pdf;
 }
 
@@ -296,7 +302,7 @@ async function extractPdf(file, status, psm) {
       status(t("st_ocr"), 0);
       var vp = page.getViewport({ scale: 2.4 }), cv = document.createElement("canvas");
       cv.width = vp.width; cv.height = vp.height;
-      await page.render({ canvasContext: cv.getContext("2d"), viewport: vp }).promise;
+      await page.render({ canvas: cv, canvasContext: cv.getContext("2d"), viewport: vp }).promise;
       txt = await ocrCanvas(cv, psm);
     }
     out.push(txt);
