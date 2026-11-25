@@ -10,6 +10,7 @@ it: {
   up_title: "Carica la tua busta paga", up_sub: "Una foto o il PDF: ti spiego ogni voce in parole semplici.",
   bPhoto: "Scatta una foto", bFile: "Scegli foto o PDF", drop: "oppure trascina qui il file",
   bDemo: "Prova con un esempio", priv: "Privato: l'analisi avviene sul tuo telefono. Nessun file viene inviato online.",
+  anon: "Copia testo per assistenza (senza dati personali)",
   prog_t: "Lettura in corso", st_lib: "Preparo il lettore (solo la prima volta)…", st_pdf: "Leggo il PDF…", st_ocr: "Riconosco il testo",
   st_ocr2: "Provo una seconda lettura…", st_an: "Analizzo la busta…",
   err_read: "Non sono riuscito a leggere il file. Prova con una foto più nitida o con il PDF originale.",
@@ -60,6 +61,7 @@ es: {
   up_title: "Sube tu busta paga", up_sub: "Una foto o el PDF: te explico cada concepto con palabras sencillas.",
   bPhoto: "Hacer una foto", bFile: "Elegir foto o PDF", drop: "o arrastra aquí el archivo",
   bDemo: "Prueba con un ejemplo", priv: "Privado: el análisis se hace en tu móvil. Ningún archivo se envía a internet.",
+  anon: "Copiar texto para soporte (sin datos personales)",
   prog_t: "Leyendo", st_lib: "Preparo el lector (solo la primera vez)…", st_pdf: "Leyendo el PDF…", st_ocr: "Reconociendo el texto",
   st_ocr2: "Pruebo una segunda lectura…", st_an: "Analizando la busta…",
   err_read: "No he podido leer el archivo. Prueba con una foto más nítida o con el PDF original.",
@@ -490,7 +492,7 @@ function render(r) {
   if (nf.length) h += section(t("sec_nf"), '<p class="muted">' + esc(t("nf_p")) + "</p><p style=\"margin-top:6px;font-weight:600\">" + esc(nf.join(" · ")) + "</p>");
 
   /* texto leído */
-  h += '<section class="card"><details><summary>' + esc(t("sec_txt")) + '</summary><p class="muted" style="margin-top:8px">' + esc(t("txt_p")) + '</p><textarea id="rawtxt" spellcheck="false"></textarea><div class="acts" style="margin:8px 0 0"><button class="btn small" id="bReparse">' + esc(t("reparse")) + "</button></div></details></section>";
+  h += '<section class="card"><details><summary>' + esc(t("sec_txt")) + '</summary><p class="muted" style="margin-top:8px">' + esc(t("txt_p")) + '</p><textarea id="rawtxt" spellcheck="false"></textarea><div class="acts" style="margin:8px 0 0"><button class="btn small" id="bReparse">' + esc(t("reparse")) + '</button><button class="btn small" id="bAnon">' + esc(t("anon")) + "</button></div></details></section>";
 
   var out = $("out"); out.innerHTML = h; out.classList.remove("hidden");
   $("rawtxt").value = lastText;
@@ -498,6 +500,7 @@ function render(r) {
   $("bCopy").onclick = copySummary;
   if ($("bPdf")) $("bPdf").onclick = function () { window.BC_MONEY.report(); };
   if ($("bShare")) $("bShare").onclick = function () { navigator.share({ title: t("sum_title"), text: summaryText(r) }).catch(function () {}); };
+  $("bAnon").onclick = function () { copyText(anonymize($("rawtxt").value)); };
   $("bReparse").onclick = function () { lastText = $("rawtxt").value; last = BustaParser.parse(lastText); render(last); window.scrollTo(0, 0); };
 }
 function cap(s) { s = String(s).toLowerCase(); return s.charAt(0).toUpperCase() + s.slice(1); }
@@ -522,6 +525,18 @@ function summaryText(r) {
   if (v.irpef_netta != null) L.push(t("irpef_netta") + ": " + eur(v.irpef_netta));
   ["ferie", "rol"].forEach(function (key) { var o = r.ferie[key]; if (o && o.sal != null) L.push(t(key + "_t") + " – " + t("sal") + ": " + qty(o.sal, o.u)); });
   return L.join("\n");
+}
+function anonymize(txt) {
+  return String(txt).split("\n").map(function (l) {
+    if (/COGNOME|\bNOME\b|DIPENDENTE\s*:|MATRICOLA|\bMATR\b|COD\.?\s*FISC|CODICE\s+FISCALE|C\.F\.|INDIRIZZO|RESIDENZ|NATO\s+A|IBAN|CONTO\s+CORRENTE|\bVIA\b|\bCAP\b|P\.?\s*IVA|PARTITA\s+IVA/i.test(l)) return "[riga omessa]";
+    return l.replace(/\b[A-Z]{6}\d{2}[A-Z]\d{2}[A-Z]\d{3}[A-Z]\b/gi, "[CF]").replace(/\bIT\d{2}[A-Z]\d{10}[0-9A-Z]{12}\b/gi, "[IBAN]").replace(/[\w.+-]+@[\w-]+\.[\w.]+/g, "[email]").replace(/\b\d{9,}\b/g, "[num]");
+  }).join("\n");
+}
+function copyText(txt) {
+  (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(function () { toast(t("copied")); }, function () {
+    var a = document.createElement("textarea"); a.value = txt; document.body.appendChild(a); a.select();
+    try { document.execCommand("copy"); toast(t("copied")); } catch (e) {} a.remove();
+  });
 }
 function copySummary() {
   var txt = summaryText(last);

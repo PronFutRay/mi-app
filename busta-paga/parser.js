@@ -261,6 +261,13 @@ function parse(text) {
   lists.bonus = listLines(/TRATTAMENTO\s+INTEGRATIVO|BONUS|CUNEO|ESONERO|RIDUZIONE\s+(?:CONTRIBUT\w*|CUNEO)|\bL\.?\s*207|ART\.?\s*1\s+C\.?\s*121|INDENNITA\w*|PREMIO|PREMI\b|WELFARE|BUON[IO]\s+PASTO|TICKET|MENSA|RIMBORS\w*|TRASFERT\w*|FRINGE/, { max: 6, not: /TFR|IMPONIBILE|CONTRIB|INPS|NETTO|TOTALE|ASSENZ|MALATT|INFORTUN|SOSTITUTIVA\s+FERIE/ });
   lists.tratt = listLines(/^TRATT\w*|^RITENUTA|QUOTA\s+SINDAC\w*|CONTRIBUTO\s+SINDAC\w*|TESSERA\s+SINDAC\w*|\bANTICIPO\b|^ACCONTO\b|CESSIONE|PIGNORAMENTO|PRESTITO|^RATA\b|FINANZIAMENTO/, { max: 5, not: /INPS|IRPEF|ADD\w*|TFR|FISCAL|PREVIDENZ|ASSENZ|MALATT|TOTALE|NETTO|ARROTOND/ });
 
+  /* ---------- Filtros de plausibilidad (evita mostrar datos imposibles) ---------- */
+  if (v.lordo != null && v.lordo < 50) delete v.lordo;
+  if (v.netto != null && (v.netto < 20 || (v.lordo != null && v.netto > v.lordo * 1.02))) delete v.netto;
+  ["tratt", "inps", "irpef_netta", "inps_az"].forEach(function (k) { if (v[k] != null && v.lordo != null && v[k] > v.lordo * 1.02) delete v[k]; });
+  monthLines = monthLines.filter(function (it) { var q = it.nums[0], a = it.nums[it.nums.length - 1]; return q <= 31 && (it.nums.length < 2 || a <= 350 * q); });
+  rolMonth = rolMonth.filter(function (it) { return it.nums[0] <= 200; });
+
   /* ---------- Controles ---------- */
   var check = null;
   if (v.lordo != null && v.tratt != null && v.netto != null) {
