@@ -201,12 +201,16 @@ function createGuarded(opts, ms) {
 function getWorker() {
   if (workerP) return workerP;
   workerP = loadScript(LIBS.tess, "Tesseract").then(async function (src) {
-    var attempts = [];
-    /* 1) todo local (APK) */
-    if (src.indexOf("vendor/") === 0) attempts.push({ workerPath: abs("vendor/worker.min.js"), corePath: abs("vendor/core/"), langPath: abs("vendor/lang/") });
-    /* 2) motor online + idioma italiano incluido en la app (ligero) */
-    attempts.push({ langPath: abs("vendor/lang/") });
-    /* 3) todo online */
+    var attempts = [], cap = !!window.Capacitor;
+    /* En el APK Android el idioma se guarda sin el sufijo .gz; en la web con .gz */
+    if (src.indexOf("vendor/") === 0) {
+      var loc = { workerPath: abs("vendor/worker.min.js"), corePath: abs("vendor/core/"), langPath: abs("vendor/lang/") };
+      attempts.push(Object.assign({ gzip: !cap }, loc));
+      attempts.push(Object.assign({ gzip: cap }, loc));
+    }
+    /* motor online + idioma italiano incluido en la app */
+    attempts.push({ langPath: abs("vendor/lang/"), gzip: !cap });
+    /* todo online */
     attempts.push({});
     var lastErr;
     for (var i = 0; i < attempts.length; i++) {
