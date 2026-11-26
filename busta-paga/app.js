@@ -63,6 +63,8 @@ it: {
   ai_big: "File troppo grande: prova con meno pagine o con una foto.", ai_not: "Questo documento non sembra una busta paga.",
   sec_codes: "Codici e abbreviazioni spiegati", codes_p: "Voci scritte in codice e cosa significano. Quelle «incerte» chiedile all'ufficio paghe.",
   cf_high: "sicuro", cf_medium: "probabile", cf_low: "incerto", sec_warn: "Da controllare", sec_more: "Altre voci spiegate",
+  code_t: "Codice di accesso", code_p: "Inserisci il codice per attivare la lettura intelligente su questo telefono.",
+  code_ok: "Lettura intelligente attivata ✓", code_bad: "Codice non valido.",
   lang_load: "Traduco l'app…", lang_err: "Traduzione non disponibile ora. Riprova più tardi.",
   sum_title: "Riepilogo busta paga"
 },
@@ -124,6 +126,8 @@ es: {
   ai_big: "Archivo demasiado grande: prueba con menos páginas o con una foto.", ai_not: "Este documento no parece una busta paga.",
   sec_codes: "Códigos y abreviaturas explicados", codes_p: "Líneas escritas en código y lo que significan. Las «inciertas», pregúntalas a la oficina de nóminas.",
   cf_high: "seguro", cf_medium: "probable", cf_low: "incierto", sec_warn: "Para revisar", sec_more: "Otras líneas explicadas",
+  code_t: "Código de acceso", code_p: "Escribe el código para activar la lectura inteligente en este móvil.",
+  code_ok: "Lectura inteligente activada ✓", code_bad: "Código no válido.",
   lang_load: "Traduciendo la app…", lang_err: "Traducción no disponible ahora. Inténtalo más tarde.",
   sum_title: "Resumen de la busta paga"
 }};
@@ -167,8 +171,8 @@ function applyLang() {
   document.documentElement.lang = LANG;
   document.documentElement.dir = RTL.indexOf(LANG) >= 0 ? "rtl" : "ltr";
   ["tag", "up_title", "up_sub", "bPhoto", "bFile", "drop", "bDemo", "priv", "prog_t", "disc", "pw_t", "pw_p", "ai_first_t", "ai_first_p", "ai_c_t", "ai_c_p"].forEach(function (k) { var e = $(k); if (e) e.textContent = t(k); });
-  if (AI) $("priv").textContent = t("priv_ai");
-  $("aiBox").classList.toggle("hidden", !AI);
+  if (aiOn()) $("priv").textContent = t("priv_ai");
+  $("aiBox").classList.toggle("hidden", !aiOn());
   $("bCancel").textContent = t("pw_no");
   $("pwOk").textContent = t("pw_ok"); $("pwNo").textContent = t("pw_no");
   $("aiOk").textContent = t("ai_ok"); $("aiNo").textContent = t("pw_no");
@@ -177,7 +181,7 @@ function applyLang() {
   if (last) render(last);
 }
 function fillLangSel() {
-  var codes = AI ? CODES : CODES.filter(function (c) { return T[c] || cachedUi(c); });
+  var codes = aiOn() ? CODES : CODES.filter(function (c) { return T[c] || cachedUi(c); });
   $("langSel").innerHTML = codes.map(function (c) { return '<option value="' + c + '">' + esc(nativeName(c)) + "</option>"; }).join("");
   $("langSel").value = LANG;
 }
@@ -194,7 +198,7 @@ async function setLang(l) {
   if (!T[l]) {
     var c = cachedUi(l);
     if (c) T[l] = unflat(c);
-    else if (AI) {
+    else if (aiOn()) {
       if (langBusy) return;
       langBusy = true; $("langSel").disabled = true; toast(t("lang_load") + " " + nativeName(l), 120000);
       try { T[l] = unflat(await translateUi(l)); }
@@ -212,12 +216,39 @@ function toast(m, ms) { var e = $("toast"); e.textContent = m; e.classList.add("
 function hideToast() { clearTimeout(toastTm); $("toast").classList.remove("show"); }
 
 /* ============================ LECTURA INTELIGENTE (IA) ============================ */
+/* Modo privado: la IA solo se activa en móviles donde se ha puesto el código de acceso.
+   Para meterlo: toca 5 veces el logo de arriba, o abre la web con ?acceso=CODIGO */
+function aiCode() { try { return localStorage.getItem("bc.ai.code") || ""; } catch (e) { return ""; } }
+function aiOn() { return !!(AI && aiCode()); }
+function aiLock() { try { localStorage.removeItem("bc.ai.code"); } catch (e) {} fillLangSel(); applyLang(); }
+async function tryCode(code) {
+  code = String(code || "").trim().toUpperCase();
+  if (!code || !AI) return;
+  try {
+    await aiPost({ action: "check", code: code }, 20000);
+    try { localStorage.setItem("bc.ai.code", code); } catch (e) {}
+    fillLangSel(); applyLang(); toast(t("code_ok"), 3500);
+  } catch (e) { toast(t("code_bad") + (e && e.message && e.message !== "locked" ? " [" + e.message + "]" : ""), 3500); }
+}
+function askCode() {
+  return new Promise(function (res) {
+    pwResolve = res; $("pw_t").textContent = t("code_t"); $("pw_p").textContent = t("code_p");
+    $("pwIn").value = ""; $("pwIn").type = "text"; $("pwModal").classList.add("show"); setTimeout(function () { $("pwIn").focus(); }, 50);
+  });
+}
+var logoTaps = [];
+document.querySelector(".logo").addEventListener("click", function () {
+  var now = Date.now(); logoTaps = logoTaps.filter(function (x) { return now - x < 3000; }); logoTaps.push(now);
+  if (logoTaps.length >= 5 && AI) { logoTaps = []; askCode().then(function (c) { $("pwIn").type = "password"; $("pw_t").textContent = t("pw_t"); if (c) tryCode(c); }); }
+});
 async function aiPost(body, ms) {
   var ctl = window.AbortController ? new AbortController() : null;
   var tm = setTimeout(function () { if (ctl) ctl.abort(); }, ms);
   try {
+    body.code = body.code || aiCode();
     var resp = await fetch(AI, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal: ctl ? ctl.signal : undefined });
     var data = await resp.json().catch(function () { return null; });
+    if (data && data.error === "locked" && body.action !== "check") { aiLock(); }
     if (!data || !data.ok) throw new Error((data && data.error) || "http" + resp.status);
     return data;
   } finally { clearTimeout(tm); }
@@ -290,7 +321,7 @@ function fromAi(a) {
            ai: { summary: a.summary || [], warnings: a.warnings || [], decoded: a.decoded || [], more: more, leave: otherLeave, payslip: a.is_payslip !== false } };
 }
 async function runAi(files, hint) {
-  if (!AI || !files || !files.length) return;
+  if (!aiOn() || !files || !files.length) return;
   if (!(await aiConsent())) return;
   var mine = ++runId, fake = null; my = mine;
   $("out").classList.add("hidden"); $("upload").classList.add("hidden"); showProg(true); setStatus(t("st_prep"), 0.05);
@@ -459,7 +490,7 @@ function itemsToLines(items) {
 var pwResolve = null;
 function askPassword(wrong) {
   return new Promise(function (res) {
-    pwResolve = res; $("pw_p").textContent = wrong ? t("pw_bad") : t("pw_p");
+    pwResolve = res; $("pw_t").textContent = t("pw_t"); $("pwIn").type = "password"; $("pw_p").textContent = wrong ? t("pw_bad") : t("pw_p");
     $("pwIn").value = ""; $("pwModal").classList.add("show"); setTimeout(function () { $("pwIn").focus(); }, 50);
   });
 }
@@ -526,7 +557,7 @@ async function handleFiles(fl) {
   var files = Array.prototype.slice.call(fl || []);
   if (!files.length) return;
   lastFiles = files; lastPw = null;
-  if (AI && $("aiFirst").checked) { last = null; return runAi(files, ""); }
+  if (aiOn() && $("aiFirst").checked) { last = null; return runAi(files, ""); }
   var mine = ++runId; my = mine;
   $("out").classList.add("hidden"); $("upload").classList.add("hidden"); showProg(true); setStatus(t("st_lib"), 0.03);
   try {
@@ -583,7 +614,7 @@ function itemRow(it) {
 function render(r) {
   var v = r.v, h = "", i, k;
   var per = r.period ? (t("m")[r.period.m - 1] + " " + r.period.y).trim() : "";
-  var canAi = !!(AI && lastFiles && !r.ai);
+  var canAi = !!(aiOn() && lastFiles && !r.ai);
 
   /* hero */
   if (v.netto != null || v.lordo != null) {
@@ -754,7 +785,8 @@ function copySummary() {
 
 fillLangSel();
 applyLang();
-if (wantLang && AI) setLang(wantLang);
+if (wantLang && aiOn()) setLang(wantLang);
+try { var qc = new URLSearchParams(location.search).get("acceso"); if (qc) { history.replaceState(null, "", location.pathname); tryCode(qc); } } catch (e) {}
 window.__bcReady = true;
 window.__BC = { handleFiles: handleFiles, finish: finish, lang: function () { return LANG; }, toast: toast, shareSummary: function () {
   if (!last) return;

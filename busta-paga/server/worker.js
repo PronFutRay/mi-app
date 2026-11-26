@@ -21,6 +21,11 @@ const DEFAULT_ORIGINS = [
   "capacitor://localhost",
 ];
 
+/* Acceso privado: solo quien tenga el código puede usar la IA (gasta tu saldo).
+   Aquí solo está la huella del código, no el código. Para cambiarlo: secreto ACCESS_CODE.
+   Para abrirlo a todo el mundo (cuando cobres): variable OPEN = 1 */
+const ACCESS_HASH = "458fd20bd1d76047fffc6ec648022c5f92cefbf37f0d19699fa824e9cc655593";
+
 const MAX_BODY_BYTES = 9 * 1024 * 1024;   // petición completa
 const MAX_FILES = 4;
 const MAX_B64_TOTAL = 8 * 1024 * 1024;    // todas las imágenes juntas
@@ -152,6 +157,18 @@ function uiSystemPrompt(lang) {
 }
 
 /* ---------- utilidades ---------- */
+
+async function sha256hex(s) {
+  const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+  return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+async function accessOk(body, env) {
+  if (env.OPEN === "1") return true;
+  const code = typeof body.code === "string" ? body.code.trim().toUpperCase() : "";
+  if (!code || code.length > 64) return false;
+  if (env.ACCESS_CODE) return code === String(env.ACCESS_CODE).trim().toUpperCase();
+  return (await sha256hex(code)) === ACCESS_HASH;
+}
 
 function allowedOrigins(env) {
   const extra = (env.ALLOWED_ORIGINS || "").split(",").map((s) => s.trim()).filter(Boolean);
@@ -358,7 +375,7 @@ export default {
 
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
     if (origin && !allowedOrigins(env).includes(origin)) return json({ ok: false, error: "origin" }, 403, cors);
-    if (request.method === "GET") return json({ ok: true, ai: !!env.ANTHROPIC_API_KEY, limits: !!env.LIMITS }, 200, cors);
+    if (request.method === "GET") return json({ ok: true, ai: !!env.ANTHROPIC_API_KEY, limits: !!env.LIMITS, locked: env.OPEN !== "1" }, 200, cors);
     if (request.method !== "POST") return json({ ok: false, error: "method" }, 405, cors);
     if (!env.ANTHROPIC_API_KEY) return json({ ok: false, error: "disabled" }, 503, cors);
 
@@ -370,6 +387,10 @@ export default {
     if (!body || typeof body !== "object") return json({ ok: false, error: "bad" }, 400, cors);
 
     const ip = request.headers.get("CF-Connecting-IP") || "anon";
+    if (!(await accessOk(body, env))) {
+      return json({ ok: false, error: "locked" }, 401, cors);
+    }
+    if (body.action === "check") return json({ ok: true }, 200, cors);
     try {
       if (body.action === "read") return await actionRead(body, env, ip, cors);
       if (body.action === "ui") return await actionUi(body, env, ip, cors);
