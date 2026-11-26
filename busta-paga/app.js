@@ -54,21 +54,22 @@ it: {
   b_net: "Dai {l} € lordi ricevi {n} € ({p}%).", b_ferie: "Hai ancora {n} {u} di ferie da usare.", b_rol: "Permessi ROL ancora disponibili: {n} {u}.",
   b_pens: "Questo mese per la tua pensione: circa {t} € (tu {a} € + azienda {b} €).", b_pens_est: "(stima)",
   nf_netto: "netto", nf_lordo: "lordo", nf_tratt: "totale trattenute", nf_inps: "contributi INPS", nf_irpef: "IRPEF", nf_ferie: "ferie e permessi",
-  priv_ai: "Lettura normale: tutto resta sul tuo telefono. Lettura intelligente: la busta viene inviata al servizio di IA solo quando lo scegli tu.",
-  ai_first_t: "Lettura intelligente (IA)", ai_first_p: "Consigliata per buste difficili, scritte male o piene di codici: legge e spiega ogni voce.",
-  ai_btn: "✨ Lettura intelligente", ai_tag: "Letta con IA", ai_low: "Prova la lettura intelligente: capisce anche buste scritte male o in codice.",
-  ai_c_t: "Lettura intelligente", ai_c_p: "Per leggerla, la busta viene inviata in modo protetto al nostro server e al servizio di IA Claude (Anthropic). Noi non la conserviamo. Se vuoi, prima copri nome, codice fiscale e IBAN. Continuare?",
-  ai_ok: "Sì, continua", st_prep: "Preparo le pagine…", st_ai: "L'IA sta leggendo la tua busta…",
-  ai_err: "La lettura intelligente non è riuscita. Riprova tra poco.", ai_limit: "Hai raggiunto il limite di letture intelligenti di oggi. Riprova domani.",
+  priv_ai: "Lettura base: tutto resta sul tuo telefono. Lettura avanzata: la busta viene inviata in modo protetto al nostro server solo quando lo scegli tu.",
+  free_left: "Letture base gratuite oggi: {n} su 2.", free_used: "Hai usato le 2 letture gratuite di oggi. Torna domani oppure passa alla lettura avanzata.",
+  ai_first_t: "Lettura avanzata", ai_first_p: "Consigliata per buste difficili, scritte male o piene di codici: legge e spiega ogni voce.",
+  ai_btn: "✨ Lettura avanzata", ai_tag: "Lettura avanzata", ai_low: "Prova la lettura avanzata: capisce anche buste scritte male o in codice.",
+  ai_c_t: "Lettura avanzata", ai_c_p: "Per la lettura avanzata, la busta viene inviata in modo protetto al nostro server per essere elaborata. Non la conserviamo. Se vuoi, prima copri nome, codice fiscale e IBAN. Continuare?",
+  ai_ok: "Sì, continua", st_prep: "Preparo le pagine…", st_ai: "Sto leggendo la tua busta in dettaglio…",
+  ai_err: "La lettura avanzata non è riuscita. Riprova tra poco.", ai_limit: "Hai raggiunto il limite di letture avanzate di oggi. Riprova domani.",
   ai_big: "File troppo grande: prova con meno pagine o con una foto.", ai_not: "Questo documento non sembra una busta paga.",
   sec_codes: "Codici e abbreviazioni spiegati", codes_p: "Voci scritte in codice e cosa significano. Quelle «incerte» chiedile all'ufficio paghe.",
   cf_high: "sicuro", cf_medium: "probabile", cf_low: "incerto", sec_warn: "Da controllare", sec_more: "Altre voci spiegate",
-  code_t: "Codice di accesso", code_p: "Inserisci il codice per attivare la lettura intelligente su questo telefono.",
-  code_ok: "Lettura intelligente attivata ✓", code_bad: "Codice non valido.",
-  buy_t: "Lettura intelligente", buy_p: "{n} letture intelligenti per {p}. Paghi in modo sicuro con PayPal o con carta. Le letture restano su questo telefono e non scadono.",
+  code_t: "Codice di accesso", code_p: "Inserisci il codice per attivare la lettura avanzata su questo telefono.",
+  code_ok: "Lettura avanzata attivata ✓", code_bad: "Codice non valido.",
+  buy_t: "Lettura avanzata", buy_p: "{n} letture avanzate per {p}. Paghi in modo sicuro con PayPal o con carta. Le letture restano su questo telefono e non scadono.",
   buy_ok: "Paga {p}", buy_have: "Ho già un codice", buy_wait: "Apro PayPal…", buy_short: "{n} letture: {p}",
-  paid_t: "Pagamento riuscito ✓", paid_p: "Hai {n} letture intelligenti. Questo è il tuo codice: salvalo per usarlo su un altro telefono.", paid_copy: "Copia codice",
-  left: "Letture intelligenti rimaste: {n}", pay_cancel: "Pagamento annullato.", pay_pending: "Pagamento non ancora confermato. Riprova tra un momento.",
+  paid_t: "Pagamento riuscito ✓", paid_p: "Hai {n} letture avanzate. Questo è il tuo codice: salvalo per usarlo su un altro telefono.", paid_copy: "Copia codice",
+  left: "Letture avanzate rimaste: {n}", pay_cancel: "Pagamento annullato.", pay_pending: "Pagamento non ancora confermato. Riprova tra un momento.",
   pay_err: "Pagamento non completato. Se ti è stato addebitato, scrivici.", lang_na: "Questa lingua non è ancora disponibile.",
   lang_load: "Traduco l'app…", lang_err: "Traduzione non disponibile ora. Riprova più tardi.",
   sum_title: "Riepilogo busta paga"
@@ -122,30 +123,31 @@ es: {
   b_net: "De {l} € brutos recibes {n} € ({p} %).", b_ferie: "Aún tienes {n} {u} de vacaciones por usar.", b_rol: "Permisos ROL aún disponibles: {n} {u}.",
   b_pens: "Este mes para tu pensión: unos {t} € (tú {a} € + empresa {b} €).", b_pens_est: "(estimación)",
   nf_netto: "neto", nf_lordo: "bruto", nf_tratt: "total descuentos", nf_inps: "cotización INPS", nf_irpef: "IRPEF", nf_ferie: "vacaciones y permisos",
-  priv_ai: "Lectura normal: todo se queda en tu móvil. Lectura inteligente: la busta se envía al servicio de IA solo cuando tú lo eliges.",
-  ai_first_t: "Lectura inteligente (IA)", ai_first_p: "Recomendada para bustas difíciles, mal escritas o llenas de códigos: lee y explica cada línea.",
-  ai_btn: "✨ Lectura inteligente", ai_tag: "Leída con IA", ai_low: "Prueba la lectura inteligente: entiende también bustas mal escritas o en código.",
-  ai_c_t: "Lectura inteligente", ai_c_p: "Para leerla, la busta se envía de forma protegida a nuestro servidor y al servicio de IA Claude (Anthropic). Nosotros no la guardamos. Si quieres, antes tapa nombre, codice fiscale e IBAN. ¿Continuar?",
-  ai_ok: "Sí, continuar", st_prep: "Preparo las páginas…", st_ai: "La IA está leyendo tu busta…",
-  ai_err: "La lectura inteligente no ha funcionado. Inténtalo de nuevo en un rato.", ai_limit: "Has llegado al límite de lecturas inteligentes de hoy. Vuelve a intentarlo mañana.",
+  priv_ai: "Lectura básica: todo se queda en tu móvil. Lectura avanzada: la busta se envía de forma protegida a nuestro servidor solo cuando tú lo eliges.",
+  free_left: "Lecturas básicas gratis hoy: {n} de 2.", free_used: "Has usado las 2 lecturas gratis de hoy. Vuelve mañana o pasa a la lectura avanzada.",
+  ai_first_t: "Lectura avanzada", ai_first_p: "Recomendada para bustas difíciles, mal escritas o llenas de códigos: lee y explica cada línea.",
+  ai_btn: "✨ Lectura avanzada", ai_tag: "Lectura avanzada", ai_low: "Prueba la lectura avanzada: entiende también bustas mal escritas o en código.",
+  ai_c_t: "Lectura avanzada", ai_c_p: "Para la lectura avanzada, la busta se envía de forma protegida a nuestro servidor para procesarla. No la guardamos. Si quieres, antes tapa nombre, codice fiscale e IBAN. ¿Continuar?",
+  ai_ok: "Sí, continuar", st_prep: "Preparo las páginas…", st_ai: "Leyendo tu busta en detalle…",
+  ai_err: "La lectura avanzada no ha funcionado. Inténtalo de nuevo en un rato.", ai_limit: "Has llegado al límite de lecturas avanzadas de hoy. Vuelve a intentarlo mañana.",
   ai_big: "Archivo demasiado grande: prueba con menos páginas o con una foto.", ai_not: "Este documento no parece una busta paga.",
   sec_codes: "Códigos y abreviaturas explicados", codes_p: "Líneas escritas en código y lo que significan. Las «inciertas», pregúntalas a la oficina de nóminas.",
   cf_high: "seguro", cf_medium: "probable", cf_low: "incierto", sec_warn: "Para revisar", sec_more: "Otras líneas explicadas",
-  code_t: "Código de acceso", code_p: "Escribe el código para activar la lectura inteligente en este móvil.",
-  code_ok: "Lectura inteligente activada ✓", code_bad: "Código no válido.",
-  buy_t: "Lectura inteligente", buy_p: "{n} lecturas inteligentes por {p}. Pagas de forma segura con PayPal o con tarjeta. Las lecturas se quedan en este móvil y no caducan.",
+  code_t: "Código de acceso", code_p: "Escribe el código para activar la lectura avanzada en este móvil.",
+  code_ok: "Lectura avanzada activada ✓", code_bad: "Código no válido.",
+  buy_t: "Lectura avanzada", buy_p: "{n} lecturas avanzadas por {p}. Pagas de forma segura con PayPal o con tarjeta. Las lecturas se quedan en este móvil y no caducan.",
   buy_ok: "Pagar {p}", buy_have: "Ya tengo un código", buy_wait: "Abriendo PayPal…", buy_short: "{n} lecturas: {p}",
-  paid_t: "Pago completado ✓", paid_p: "Tienes {n} lecturas inteligentes. Este es tu código: guárdalo para usarlo en otro móvil.", paid_copy: "Copiar código",
-  left: "Lecturas inteligentes restantes: {n}", pay_cancel: "Pago cancelado.", pay_pending: "Pago aún no confirmado. Inténtalo de nuevo en un momento.",
+  paid_t: "Pago completado ✓", paid_p: "Tienes {n} lecturas avanzadas. Este es tu código: guárdalo para usarlo en otro móvil.", paid_copy: "Copiar código",
+  left: "Lecturas avanzadas restantes: {n}", pay_cancel: "Pago cancelado.", pay_pending: "Pago aún no confirmado. Inténtalo de nuevo en un momento.",
   pay_err: "Pago no completado. Si te lo han cobrado, escríbenos.", lang_na: "Este idioma aún no está disponible.",
   lang_load: "Traduciendo la app…", lang_err: "Traducción no disponible ahora. Inténtalo más tarde.",
   sum_title: "Resumen de la busta paga"
 }};
 
-/* ---- idiomas: IT y ES incluidos; los demás los traduce la IA una vez y se guardan en el móvil ---- */
+/* ---- idiomas: IT y ES incluidos; los demás se traducen una vez en el servidor y se guardan ---- */
 var CFG = window.BC_CONFIG || {};
 var AI = String(CFG.AI_URL || "").trim().replace(/\/+$/, "");
-var UI_VER = "v2";
+var UI_VER = "v3";
 var CODES = ["it", "es", "en", "fr", "de", "pt", "ro", "sq", "uk", "ru", "pl", "bg", "cs", "sk", "hu", "hr", "sr", "bs", "mk", "sl", "el",
   "nl", "sv", "da", "no", "fi", "lt", "lv", "et", "tr", "ar", "fa", "he", "ur", "hi", "pa", "bn", "ta", "si", "ne", "ml", "te", "gu", "mr",
   "zh", "ja", "ko", "vi", "th", "id", "ms", "tl", "am", "ti", "so", "sw", "ha", "yo", "ig", "wo", "ka", "hy", "az", "uz", "kk"];
@@ -182,6 +184,7 @@ function applyLang() {
   document.documentElement.dir = RTL.indexOf(LANG) >= 0 ? "rtl" : "ltr";
   ["tag", "up_title", "up_sub", "bPhoto", "bFile", "drop", "bDemo", "priv", "prog_t", "disc", "pw_t", "pw_p", "ai_first_t", "ai_first_p", "ai_c_t", "ai_c_p"].forEach(function (k) { var e = $(k); if (e) e.textContent = t(k); });
   if (aiOn()) $("priv").textContent = t("priv_ai");
+  if (!hasCode()) $("priv").textContent += " " + fill(t("free_left"), { n: freeLeft() });
   if (aiOn()) $("ai_first_p").textContent = t("ai_first_p") + " " + (hasCode() ? (aiLeft() >= 0 ? fill(t("left"), { n: aiLeft() }) : "") : fill(t("buy_short"), { n: PACK, p: PRICE }));
   $("buy_t").textContent = t("buy_t"); $("buy_p").textContent = fill(t("buy_p"), { n: PACK, p: PRICE });
   $("buyOk").textContent = fill(t("buy_ok"), { p: PRICE }); $("buyNo").textContent = t("pw_no"); $("buyHave").textContent = t("buy_have");
@@ -229,8 +232,8 @@ var toastTm = null;
 function toast(m, ms) { var e = $("toast"); e.textContent = m; e.classList.add("show"); clearTimeout(toastTm); toastTm = setTimeout(hideToast, ms || 2600); }
 function hideToast() { clearTimeout(toastTm); $("toast").classList.remove("show"); }
 
-/* ============================ LECTURA INTELIGENTE (IA) ============================ */
-/* Modo privado: la IA solo se activa en móviles donde se ha puesto el código de acceso.
+/* ============================ LECTURA AVANZADA ============================ */
+/* La lectura avanzada se activa con un código (comprado o maestro).
    Para meterlo: toca 5 veces el logo de arriba, o abre la web con ?acceso=CODIGO */
 function aiCode() { try { return localStorage.getItem("bc.ai.code") || ""; } catch (e) { return ""; } }
 function aiOn() { return !!AI; }
@@ -247,7 +250,16 @@ function payLocale() { return { it: "it-IT", es: "es-ES", en: "en-US", fr: "fr-F
 function refCode() { try { return localStorage.getItem("bc.ref") || ""; } catch (e) { return ""; } }
 function pending() { try { var p = JSON.parse(localStorage.getItem("bc.pay.claim") || "null"); return p && Date.now() - p.t < 3 * 864e5 ? p.c : null; } catch (e) { return null; } }
 function clearPending() { try { localStorage.removeItem("bc.pay.claim"); } catch (e) {} }
-function openBuy() { $("buyModal").classList.add("show"); }
+function openBuy(why) {
+  $("buy_p").textContent = (why === "free" ? t("free_used") + " " : "") + fill(t("buy_p"), { n: PACK, p: PRICE });
+  $("buyModal").classList.add("show");
+}
+/* ---- lectura básica gratis: 2 al día por móvil (ilimitada con código) ---- */
+var FREE_DAY = 2;
+function todayKey() { var d = new Date(); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); }
+function freeUsed() { try { var o = JSON.parse(localStorage.getItem("bc.free") || "null"); return o && o.d === todayKey() ? o.n : 0; } catch (e) { return 0; } }
+function freeLeft() { return Math.max(0, FREE_DAY - freeUsed()); }
+function useFree() { try { localStorage.setItem("bc.free", JSON.stringify({ d: todayKey(), n: freeUsed() + 1 })); } catch (e) {} applyLang(); }
 function closeBuy() { $("buyModal").classList.remove("show"); }
 $("buyNo").onclick = closeBuy;
 $("buyHave").onclick = function () { closeBuy(); askCode().then(function (c) { $("pwIn").type = "password"; $("pw_t").textContent = t("pw_t"); if (c) tryCode(c); }); };
@@ -411,7 +423,7 @@ async function runAi(files, hint) {
     if (e && e.name === "AbortError") code = "timeout";
     if (code === "no_credits") { setLeft(0); applyLang(); if (last) render(last); openBuy(); return; }
     var msg = code === "limit" || code === "limit_global" ? t("ai_limit") : code === "too_big" ? t("ai_big") : t("ai_err");
-    aiErr = msg + " [" + (code + (e && e.detail ? " · " + e.detail : "")).slice(0, 160) + "]";
+    aiErr = msg + " [" + code.slice(0, 40) + "]";
     if (last) render(last);
     toast(msg, 5000);
   }
@@ -628,6 +640,10 @@ async function handleFiles(fl) {
   if (!files.length) return;
   lastFiles = files; lastPw = null;
   if (aiOn() && $("aiFirst").checked) { last = null; return runAi(files, ""); }
+  if (!hasCode()) {
+    if (freeLeft() <= 0) { openBuy("free"); return; }
+    useFree();
+  }
   var mine = ++runId; my = mine;
   $("out").classList.add("hidden"); $("upload").classList.add("hidden"); showProg(true); setStatus(t("st_lib"), 0.03);
   try {
