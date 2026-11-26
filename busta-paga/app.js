@@ -55,7 +55,7 @@ it: {
   b_pens: "Questo mese per la tua pensione: circa {t} € (tu {a} € + azienda {b} €).", b_pens_est: "(stima)",
   nf_netto: "netto", nf_lordo: "lordo", nf_tratt: "totale trattenute", nf_inps: "contributi INPS", nf_irpef: "IRPEF", nf_ferie: "ferie e permessi",
   priv_ai: "Lettura base: tutto resta sul tuo telefono. Lettura avanzata: la busta viene inviata in modo protetto al nostro server solo quando lo scegli tu.",
-  free_left: "Letture base gratuite oggi: {n} su 2.", free_used: "Hai usato le 2 letture gratuite di oggi. Torna domani oppure passa alla lettura avanzata.",
+  free_left: "Letture base gratuite oggi: {n} su 2.", free_net: "Serve la connessione a internet per la lettura gratuita. Riprova.", free_used: "Hai usato le 2 letture gratuite di oggi. Torna domani oppure passa alla lettura avanzata.",
   ai_first_t: "Lettura avanzata", ai_first_p: "Consigliata per buste difficili, scritte male o piene di codici: legge e spiega ogni voce.",
   ai_btn: "✨ Lettura avanzata", ai_tag: "Lettura avanzata", ai_low: "Prova la lettura avanzata: capisce anche buste scritte male o in codice.",
   ai_c_t: "Lettura avanzata", ai_c_p: "Per la lettura avanzata, la busta viene inviata in modo protetto al nostro server per essere elaborata. Non la conserviamo. Se vuoi, prima copri nome, codice fiscale e IBAN. Continuare?",
@@ -124,7 +124,7 @@ es: {
   b_pens: "Este mes para tu pensión: unos {t} € (tú {a} € + empresa {b} €).", b_pens_est: "(estimación)",
   nf_netto: "neto", nf_lordo: "bruto", nf_tratt: "total descuentos", nf_inps: "cotización INPS", nf_irpef: "IRPEF", nf_ferie: "vacaciones y permisos",
   priv_ai: "Lectura básica: todo se queda en tu móvil. Lectura avanzada: la busta se envía de forma protegida a nuestro servidor solo cuando tú lo eliges.",
-  free_left: "Lecturas básicas gratis hoy: {n} de 2.", free_used: "Has usado las 2 lecturas gratis de hoy. Vuelve mañana o pasa a la lectura avanzada.",
+  free_left: "Lecturas básicas gratis hoy: {n} de 2.", free_net: "Necesitas conexión a internet para la lectura gratis. Inténtalo de nuevo.", free_used: "Has usado las 2 lecturas gratis de hoy. Vuelve mañana o pasa a la lectura avanzada.",
   ai_first_t: "Lectura avanzada", ai_first_p: "Recomendada para bustas difíciles, mal escritas o llenas de códigos: lee y explica cada línea.",
   ai_btn: "✨ Lectura avanzada", ai_tag: "Lectura avanzada", ai_low: "Prueba la lectura avanzada: entiende también bustas mal escritas o en código.",
   ai_c_t: "Lectura avanzada", ai_c_p: "Para la lectura avanzada, la busta se envía de forma protegida a nuestro servidor para procesarla. No la guardamos. Si quieres, antes tapa nombre, codice fiscale e IBAN. ¿Continuar?",
@@ -255,11 +255,34 @@ function openBuy(why) {
   $("buyModal").classList.add("show");
 }
 /* ---- lectura básica gratis: 2 al día por móvil (ilimitada con código) ---- */
+/* El contador vive en el servidor (por ID del teléfono y por conexión): borrar los datos no lo reinicia. */
 var FREE_DAY = 2;
-function todayKey() { var d = new Date(); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); }
-function freeUsed() { try { var o = JSON.parse(localStorage.getItem("bc.free") || "null"); return o && o.d === todayKey() ? o.n : 0; } catch (e) { return 0; } }
-function freeLeft() { return Math.max(0, FREE_DAY - freeUsed()); }
-function useFree() { try { localStorage.setItem("bc.free", JSON.stringify({ d: todayKey(), n: freeUsed() + 1 })); } catch (e) {} applyLang(); }
+function todayKey() { var d = new Date(); return d.getUTCFullYear() + "-" + (d.getUTCMonth() + 1) + "-" + d.getUTCDate(); }
+function freeLeft() { try { var o = JSON.parse(localStorage.getItem("bc.free") || "null"); return o && o.d === todayKey() ? o.n : FREE_DAY; } catch (e) { return FREE_DAY; } }
+function setFreeLeft(n) { try { localStorage.setItem("bc.free", JSON.stringify({ d: todayKey(), n: n })); } catch (e) {} applyLang(); }
+var devId = null;
+async function deviceId() {
+  if (devId) return devId;
+  try {   /* en el APK: ID del teléfono, que se mantiene aunque se borren los datos de la app */
+    var D = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Device;
+    if (D && D.getId) { var r = await D.getId(); var id = r && (r.identifier || r.uuid); if (id) return (devId = "a-" + String(id).replace(/[^A-Za-z0-9_-]/g, "").slice(0, 60)); }
+  } catch (e) {}
+  try { devId = localStorage.getItem("bc.dev"); } catch (e) {}
+  if (!devId) { devId = "w-" + rnd(24); try { localStorage.setItem("bc.dev", devId); } catch (e) {} }
+  return devId;
+}
+async function useFree() {   /* true = puede leer; false = sin lecturas gratis hoy (o sin conexión) */
+  if (!AI) return true;
+  try {
+    var d = await aiPost({ action: "free", device: await deviceId() }, 10000);
+    setFreeLeft(d.left); return true;
+  } catch (e) {
+    if (e && e.message === "free_limit") { setFreeLeft(0); openBuy("free"); }
+    else toast(t("free_net"), 5000);
+    return false;
+  }
+}
+async function peekFree() { if (!AI || hasCode()) return; try { var d = await aiPost({ action: "free", device: await deviceId(), peek: 1 }, 10000); setFreeLeft(d.left); } catch (e) {} }
 function closeBuy() { $("buyModal").classList.remove("show"); }
 $("buyNo").onclick = closeBuy;
 $("buyHave").onclick = function () { closeBuy(); askCode().then(function (c) { $("pwIn").type = "password"; $("pw_t").textContent = t("pw_t"); if (c) tryCode(c); }); };
@@ -640,10 +663,7 @@ async function handleFiles(fl) {
   if (!files.length) return;
   lastFiles = files; lastPw = null;
   if (aiOn() && $("aiFirst").checked) { last = null; return runAi(files, ""); }
-  if (!hasCode()) {
-    if (freeLeft() <= 0) { openBuy("free"); return; }
-    useFree();
-  }
+  if (!hasCode() && !(await useFree())) return;
   var mine = ++runId; my = mine;
   $("out").classList.add("hidden"); $("upload").classList.add("hidden"); showProg(true); setStatus(t("st_lib"), 0.03);
   try {
@@ -873,6 +893,7 @@ function copySummary() {
 fillLangSel();
 applyLang();
 if (wantLang && aiOn()) setLang(wantLang);
+peekFree();
 try {
   var qp = new URLSearchParams(location.search), pst = qp.get("paypal"), pcl = qp.get("claim");
   if (pst) {

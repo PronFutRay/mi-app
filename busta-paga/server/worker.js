@@ -390,6 +390,25 @@ async function actionUi(body, env, ip, cors, acc) {
   return json({ ok: true, strings: out }, 200, cors);
 }
 
+/* ---------- lectura básica gratis: 2 al día ----------
+   Se cuenta en el servidor por móvil (ID del teléfono) y por conexión (IP), así borrar
+   los datos de la app no da lecturas nuevas. FREE_DAILY (2) y FREE_IP_DAILY (6, por
+   conexiones compartidas como wifi de casa o redes móviles) se pueden cambiar. */
+async function actionFree(body, env, ip, cors, acc) {
+  const per = parseInt(env.FREE_DAILY || "2", 10), perIp = parseInt(env.FREE_IP_DAILY || "6", 10);
+  if (acc) return json({ ok: true, left: -1 }, 200, cors);           // con código: sin límite
+  if (!env.LIMITS) return json({ ok: true, left: per }, 200, cors);
+  const dev = typeof body.device === "string" && /^[A-Za-z0-9_-]{8,80}$/.test(body.device) ? body.device : null;
+  if (!dev) return json({ ok: false, error: "bad" }, 400, cors);
+  const day = today(), kd = "free:d:" + dev + ":" + day, ki = "free:ip:" + ip + ":" + day;
+  const nd = parseInt((await env.LIMITS.get(kd)) || "0", 10), ni = parseInt((await env.LIMITS.get(ki)) || "0", 10);
+  if (body.peek) return json({ ok: true, left: Math.max(0, Math.min(per - nd, perIp - ni)) }, 200, cors);
+  if (nd >= per || ni >= perIp) return json({ ok: false, error: "free_limit", left: 0 }, 429, cors);
+  await env.LIMITS.put(kd, String(nd + 1), { expirationTtl: 60 * 60 * 48 });
+  await env.LIMITS.put(ki, String(ni + 1), { expirationTtl: 60 * 60 * 48 });
+  return json({ ok: true, left: Math.max(0, Math.min(per - nd - 1, perIp - ni - 1)) }, 200, cors);
+}
+
 /* ---------- cobro con PayPal (paquetes de lecturas) ---------- */
 
 const PACK_SIZE = 5;
@@ -533,6 +552,7 @@ export default {
       if (body.action === "claim") return await actionClaim(body, env, ip, cors);
       const acc = await access(body, env);
       if (body.action === "check") return acc ? json({ ok: true, left: acc.master ? -1 : acc.left }, 200, cors) : json({ ok: false, error: "locked" }, 401, cors);
+      if (body.action === "free") return await actionFree(body, env, ip, cors, acc);
       if (body.action === "sales") return acc && acc.master && env.LIMITS ? await actionSales(env, cors) : json({ ok: false, error: "locked" }, 401, cors);
       if (!env.ANTHROPIC_API_KEY) return json({ ok: false, error: "disabled" }, 503, cors);
       if (body.action === "read") return await actionRead(body, env, ip, cors, acc);
