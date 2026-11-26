@@ -20,6 +20,13 @@ jobs:
           node-version: 20
       - name: Comprobar secretos
         run: |
+          # quitar espacios o saltos de línea que se cuelan al pegar desde el móvil
+          T=$(printf '%s' "$CLOUDFLARE_API_TOKEN" | tr -d '[:space:]'); echo "::add-mask::$T"
+          A=$(printf '%s' "$CLOUDFLARE_ACCOUNT_ID" | tr -d '[:space:]')
+          K=$(printf '%s' "$ANTHROPIC_KEY" | tr -d '[:space:]'); [ -n "$K" ] && echo "::add-mask::$K"
+          { echo "CLOUDFLARE_API_TOKEN=$T"; echo "CLOUDFLARE_ACCOUNT_ID=$A"; echo "ANTHROPIC_KEY=$K"; } >> "$GITHUB_ENV"
+          CLOUDFLARE_API_TOKEN=$T
+          echo "Longitud del token: ${#T} caracteres (uno correcto suele tener 40)"
           if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
             echo "::error::Falta el secreto CLOUDFLARE_API_TOKEN en GitHub (Settings > Secrets and variables > Actions)"; exit 1
           fi
