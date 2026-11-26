@@ -22,7 +22,9 @@ jobs:
         run: |
           # quitar espacios o saltos de línea que se cuelan al pegar desde el móvil
           T=$(printf '%s' "$CLOUDFLARE_API_TOKEN" | tr -d '[:space:]'); echo "::add-mask::$T"
-          A=$(printf '%s' "$CLOUDFLARE_ACCOUNT_ID" | tr -d '[:space:]')
+          # el ID de cuenta son 32 caracteres hexadecimales; si se pegó la dirección entera, se extrae de ahí
+          A=$(printf '%s' "$CLOUDFLARE_ACCOUNT_ID" | tr 'A-F' 'a-f' | grep -oE '[0-9a-f]{32}' | head -1 || true)
+          [ -n "$CLOUDFLARE_ACCOUNT_ID" ] && [ -z "$A" ] && echo "::warning::CLOUDFLARE_ACCOUNT_ID no parece un ID de cuenta (32 caracteres); se ignora"
           K=$(printf '%s' "$ANTHROPIC_KEY" | tr -d '[:space:]'); [ -n "$K" ] && echo "::add-mask::$K"
           { echo "CLOUDFLARE_API_TOKEN=$T"; echo "CLOUDFLARE_ACCOUNT_ID=$A"; echo "ANTHROPIC_KEY=$K"; } >> "$GITHUB_ENV"
           CLOUDFLARE_API_TOKEN=$T
