@@ -12,14 +12,13 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
-  deploy:
+  # 1) Preparar la web y subir el paquete (en un trabajo aparte, así el paquete
+  #    queda guardado del todo antes de publicarlo)
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
       - name: Preparar sitio
@@ -39,5 +38,21 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
+
+  # 2) Publicar (con un reintento automático si GitHub falla la primera vez)
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url || steps.retry.outputs.page_url }}
+    steps:
       - id: deployment
+        uses: actions/deploy-pages@v4
+        continue-on-error: true
+      - name: Esperar antes de reintentar
+        if: steps.deployment.outcome == 'failure'
+        run: sleep 30
+      - id: retry
+        if: steps.deployment.outcome == 'failure'
         uses: actions/deploy-pages@v4
