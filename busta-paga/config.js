@@ -8,6 +8,6 @@ window.BC_CONFIG = {
   COMMISSION: 30,        // % que ganan las embajadoras por cada pago con su enlace
   /* Lectura inteligente (Claude). Pega aquí la dirección de tu Worker de Cloudflare,
      ej.: "https://busta-chiara.TU-NOMBRE.workers.dev". Vacío = función oculta. */
-  AI_URL: "",
+  AI_URL: "https://busta-chiara.raul-ronaldinio1.workers.dev",
   UNLOCK_HASH: "b96701026565ee2b9d498e8c8a8e741aa66f9587e42bbae4d72b17a04f80fd15"   // huella del código de desbloqueo (el código lo das tras el pago)
 };
