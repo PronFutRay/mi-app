@@ -348,5 +348,17 @@ if(S.city){fetchTemp(S.city.lat,S.city.lon,S.city.name);$("city").value=S.city.n
 $("liters").focus();
 })();
 </script>
+<script>/* Estadísticas de uso (sin cookies ni datos personales) */
+(function () {
+  var U = "https://busta-chiara.raul-ronaldinio1.workers.dev/", S = "gpl", last = 0;
+  function send(ev) {
+    var now = Date.now(); if (ev === "ping" && now - last < 60000) return; last = now;
+    try { fetch(U, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "track", site: S, ev: ev }), keepalive: true }).catch(function () {}); } catch (e) {}
+  }
+  send("view");
+  setInterval(function () { if (document.visibilityState === "visible") send("ping"); }, 240000);
+  document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible") send("ping"); });
+})();
+</script>
 </body>
 </html>
