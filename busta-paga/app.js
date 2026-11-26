@@ -249,7 +249,7 @@ async function aiPost(body, ms) {
     var resp = await fetch(AI, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal: ctl ? ctl.signal : undefined });
     var data = await resp.json().catch(function () { return null; });
     if (data && data.error === "locked" && body.action !== "check") { aiLock(); }
-    if (!data || !data.ok) throw new Error((data && data.error) || "http" + resp.status);
+    if (!data || !data.ok) { var er = new Error((data && data.error) || "http" + resp.status); er.detail = data ? [data.status, data.reason, data.message].filter(Boolean).join(" ") : ""; throw er; }
     return data;
   } finally { clearTimeout(tm); }
 }
@@ -320,7 +320,9 @@ function fromAi(a) {
            v: v, ferie: fer, ferieMese: [], rolMese: [], lists: lists, check: check, keyFound: keyFound,
            ai: { summary: a.summary || [], warnings: a.warnings || [], decoded: a.decoded || [], more: more, leave: otherLeave, payslip: a.is_payslip !== false } };
 }
+var aiErr = "";
 async function runAi(files, hint) {
+  aiErr = "";
   if (!aiOn() || !files || !files.length) return;
   if (!(await aiConsent())) return;
   var mine = ++runId, fake = null; my = mine;
@@ -343,7 +345,11 @@ async function runAi(files, hint) {
     showProg(false);
     if (last) $("out").classList.remove("hidden"); else $("upload").classList.remove("hidden");
     var code = e && e.message ? e.message : "";
-    toast(code === "limit" || code === "limit_global" ? t("ai_limit") : code === "too_big" ? t("ai_big") : t("ai_err") + (code ? " [" + code.slice(0, 40) + "]" : ""), 5000);
+    if (e && e.name === "AbortError") code = "timeout";
+    var msg = code === "limit" || code === "limit_global" ? t("ai_limit") : code === "too_big" ? t("ai_big") : t("ai_err");
+    aiErr = msg + " [" + (code + (e && e.detail ? " · " + e.detail : "")).slice(0, 160) + "]";
+    if (last) render(last);
+    toast(msg, 5000);
   }
 }
 
@@ -629,6 +635,7 @@ function render(r) {
     h += "</div>";
   } else if (per) h += '<div class="hero"><div class="per">' + esc(per) + "</div></div>";
 
+  if (aiErr && !r.ai) h += '<div class="card"><div class="note warn" style="margin-top:0">' + esc(aiErr) + "</div></div>";
   if (r.keyFound < 4 && !r.ai) h += '<div class="card"><div class="note warn"><b>' + esc(t("low_t")) + "</b><br>" + esc(t("low_p")) + "</div>" +
     (canAi ? '<p class="muted" style="margin:12px 0 8px">' + esc(t("ai_low")) + '</p><button class="btn ai" id="bAi2">' + esc(t("ai_btn")) + "</button>" : "") + "</div>";
 
