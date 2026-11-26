@@ -187,6 +187,20 @@ textarea{width:100%;min-height:180px;margin-top:10px;border:1px solid var(--line
     <div class="btns"><button class="btn small" id="aiNo"></button><button class="btn primary small" id="aiOk"></button></div>
   </div>
 </div>
+<div class="modal" id="buyModal">
+  <div class="box">
+    <h3 id="buy_t"></h3><p id="buy_p"></p>
+    <div class="btns"><button class="btn small" id="buyNo"></button><button class="btn primary small" id="buyOk"></button></div>
+    <button class="link" id="buyHave" style="margin-top:12px"></button>
+  </div>
+</div>
+<div class="modal" id="paidModal">
+  <div class="box">
+    <h3 id="paid_t"></h3><p id="paid_p"></p>
+    <p style="text-align:center;margin:4px 0 14px"><code id="paidCode" style="font-size:18px;font-weight:800;letter-spacing:1px;background:var(--line);border-radius:8px;padding:6px 10px;color:var(--ink)"></code></p>
+    <div class="btns"><button class="btn small" id="paidCopy"></button><button class="btn primary small" id="paidOk">OK</button></div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 
 <script>

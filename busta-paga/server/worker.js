@@ -10,6 +10,8 @@
      ALLOWED_ORIGINS     opcional. Webs que pueden usar este servidor, separadas por comas
      PER_IP_DAILY        opcional. Lecturas por persona y día. Por defecto: 8
      GLOBAL_DAILY        opcional. Lecturas totales por día. Por defecto: 40
+     PAYPAL_CLIENT_ID / PAYPAL_SECRET  (secretos) cobro automático de paquetes con PayPal
+     PAYPAL_MODE         opcional. "sandbox" para pruebas. Por defecto: live
    Enlace KV (Settings → Bindings → KV namespace), nombre de variable:  LIMITS
      Sin KV no hay límites por persona ni por día: ¡ponlo!
 */
@@ -162,12 +164,17 @@ async function sha256hex(s) {
   const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
   return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
-async function accessOk(body, env) {
-  if (env.OPEN === "1") return true;
+/* Devuelve null (sin acceso), {master:true} (ilimitado) o {code, left} (paquete comprado). */
+async function access(body, env) {
+  if (env.OPEN === "1") return { master: true };
   const code = typeof body.code === "string" ? body.code.trim().toUpperCase() : "";
-  if (!code || code.length > 64) return false;
-  if (env.ACCESS_CODE) return code === String(env.ACCESS_CODE).trim().toUpperCase();
-  return (await sha256hex(code)) === ACCESS_HASH;
+  if (!code || code.length > 64) return null;
+  if (env.ACCESS_CODE ? code === String(env.ACCESS_CODE).trim().toUpperCase() : (await sha256hex(code)) === ACCESS_HASH) return { master: true };
+  if (env.LIMITS && /^BC-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(code)) {
+    const v = await env.LIMITS.get("cred:" + code);
+    if (v !== null) return { code, left: parseInt(v, 10) || 0 };
+  }
+  return null;
 }
 
 function allowedOrigins(env) {
@@ -278,7 +285,9 @@ function sanitizeRead(o) {
 
 /* ---------- acciones ---------- */
 
-async function actionRead(body, env, ip, cors) {
+async function actionRead(body, env, ip, cors, acc) {
+  if (!acc) return json({ ok: false, error: "locked" }, 401, cors);
+  if (!acc.master && acc.left <= 0) return json({ ok: false, error: "no_credits", left: 0 }, 402, cors);
   const lang = cleanLang(body.lang);
   if (!lang) return json({ ok: false, error: "bad", message: "lang" }, 400, cors);
   const files = Array.isArray(body.files) ? body.files : [];
@@ -325,10 +334,16 @@ async function actionRead(body, env, ip, cors) {
   try { parsed = JSON.parse(textOf(data)); } catch (e) { /* se informa abajo */ }
   const result = sanitizeRead(parsed);
   if (!result) return json({ ok: false, error: "parse" }, 502, cors);
-  return json({ ok: true, result }, 200, cors);
+  let left = -1;
+  if (!acc.master) {
+    const cur = parseInt((await env.LIMITS.get("cred:" + acc.code)) || "0", 10);
+    left = Math.max(0, cur - 1);
+    await env.LIMITS.put("cred:" + acc.code, String(left));
+  }
+  return json({ ok: true, result, left }, 200, cors);
 }
 
-async function actionUi(body, env, ip, cors) {
+async function actionUi(body, env, ip, cors, acc) {
   const lang = cleanLang(body.lang);
   const strings = body.strings && typeof body.strings === "object" ? body.strings : null;
   if (!lang || !strings) return json({ ok: false, error: "bad" }, 400, cors);
@@ -341,6 +356,13 @@ async function actionUi(body, env, ip, cors) {
   }
   if (size > 40000) return json({ ok: false, error: "too_big" }, 413, cors);
 
+  /* Traducciones guardadas: una vez traducido un idioma, sirve gratis para todos */
+  const ckey = "ui:" + lang + ":" + (await sha256hex(JSON.stringify(keys.map((k) => [k, strings[k]]))));
+  if (env.LIMITS) {
+    const cached = await env.LIMITS.get(ckey);
+    if (cached) return json({ ok: true, strings: JSON.parse(cached), cached: true }, 200, cors);
+  }
+  if (!acc) return json({ ok: false, error: "locked" }, 401, cors);
   const day = today();
   if (!(await bump(env, "ui:" + ip + ":" + day, 20))) return json({ ok: false, error: "limit" }, 429, cors);
 
@@ -363,7 +385,126 @@ async function actionUi(body, env, ip, cors) {
   });
   const missing = keys.filter((k) => !(k in out));
   if (missing.length > keys.length * 0.15) return json({ ok: false, error: "incomplete" }, 502, cors);
+  if (env.LIMITS) await env.LIMITS.put(ckey, JSON.stringify(out));
   return json({ ok: true, strings: out }, 200, cors);
+}
+
+/* ---------- cobro con PayPal (paquetes de lecturas) ---------- */
+
+const PACK_SIZE = 5;
+const PACK_PRICE = "2.99";
+const PACK_CURRENCY = "EUR";
+const APP_RETURN = "https://pronfutray.github.io/mi-app/busta-paga/";
+
+function ppBase(env) { return env.PAYPAL_MODE === "sandbox" ? "https://api-m.sandbox.paypal.com" : "https://api-m.paypal.com"; }
+let ppToken = null;
+async function ppAuth(env) {
+  if (ppToken && ppToken.exp > Date.now()) return ppToken.v;
+  const r = await fetch(ppBase(env) + "/v1/oauth2/token", {
+    method: "POST",
+    headers: { Authorization: "Basic " + btoa(env.PAYPAL_CLIENT_ID + ":" + env.PAYPAL_SECRET), "Content-Type": "application/x-www-form-urlencoded" },
+    body: "grant_type=client_credentials",
+  });
+  const d = await r.json().catch(() => null);
+  if (!r.ok || !d || !d.access_token) throw new Error("paypal_auth");
+  ppToken = { v: d.access_token, exp: Date.now() + Math.max(60, (d.expires_in || 3000) - 120) * 1000 };
+  return ppToken.v;
+}
+async function pp(env, method, path, body, reqId) {
+  const h = { Authorization: "Bearer " + (await ppAuth(env)), "Content-Type": "application/json" };
+  if (reqId) h["PayPal-Request-Id"] = reqId;
+  const r = await fetch(ppBase(env) + path, { method, headers: h, body: body ? JSON.stringify(body) : undefined });
+  const d = await r.json().catch(() => null);
+  return { status: r.status, data: d };
+}
+function newCode() {
+  const A = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789", b = new Uint8Array(12);
+  crypto.getRandomValues(b);
+  let s = ""; for (let i = 0; i < 12; i++) { s += A[b[i] % A.length]; if (i === 3 || i === 7) s += "-"; }
+  return "BC-" + s;
+}
+function cleanClaim(c) { return typeof c === "string" && /^[A-Za-z0-9]{20,40}$/.test(c) ? c : null; }
+
+async function actionBuy(body, env, ip, cors) {
+  if (!env.PAYPAL_CLIENT_ID || !env.PAYPAL_SECRET || !env.LIMITS) return json({ ok: false, error: "no_pay" }, 503, cors);
+  const claim = cleanClaim(body.claim);
+  if (!claim) return json({ ok: false, error: "bad" }, 400, cors);
+  if (!(await bump(env, "buy:" + ip + ":" + today(), 30))) return json({ ok: false, error: "limit" }, 429, cors);
+  const ref = typeof body.ref === "string" && /^[A-Za-z0-9_-]{1,24}$/.test(body.ref) ? body.ref : "direct";
+  const ret = typeof body.ret === "string" && body.ret.startsWith(APP_RETURN) ? APP_RETURN : APP_RETURN;
+  const back = (st) => ret + "?paypal=" + st + "&claim=" + claim;
+  const lc = typeof body.locale === "string" && /^[a-z]{2}-[A-Z]{2}$/.test(body.locale) ? body.locale : undefined;
+  const { status, data } = await pp(env, "POST", "/v2/checkout/orders", {
+    intent: "CAPTURE",
+    purchase_units: [{
+      reference_id: "busta-chiara",
+      description: "Busta Chiara - " + PACK_SIZE + " letture intelligenti",
+      custom_id: ref,
+      amount: { currency_code: PACK_CURRENCY, value: PACK_PRICE },
+    }],
+    payment_source: { paypal: { experience_context: {
+      brand_name: "Busta Chiara", user_action: "PAY_NOW", shipping_preference: "NO_SHIPPING",
+      return_url: back("ok"), cancel_url: back("cancel"), locale: lc,
+    } } },
+  }, "order-" + claim);
+  const link = data && Array.isArray(data.links) ? data.links.find((l) => l.rel === "payer-action" || l.rel === "approve") : null;
+  if (status >= 300 || !data || !data.id || !link) return json({ ok: false, error: "pay_upstream", status, message: data && (data.message || data.name) ? str(data.message || data.name, 200) : "" }, 502, cors);
+  await env.LIMITS.put("claim:" + claim, JSON.stringify({ order: data.id, ref, t: Date.now() }), { expirationTtl: 60 * 60 * 24 * 7 });
+  return json({ ok: true, url: link.href }, 200, cors);
+}
+
+async function actionClaim(body, env, ip, cors) {
+  if (!env.PAYPAL_CLIENT_ID || !env.PAYPAL_SECRET || !env.LIMITS) return json({ ok: false, error: "no_pay" }, 503, cors);
+  const claim = cleanClaim(body.claim);
+  if (!claim) return json({ ok: false, error: "bad" }, 400, cors);
+  const raw = await env.LIMITS.get("claim:" + claim);
+  if (!raw) return json({ ok: false, error: "unknown" }, 404, cors);
+  const c = JSON.parse(raw);
+  if (c.code) {
+    const left = parseInt((await env.LIMITS.get("cred:" + c.code)) || "0", 10);
+    return json({ ok: true, code: c.code, left }, 200, cors);
+  }
+  let { data } = await pp(env, "GET", "/v2/checkout/orders/" + encodeURIComponent(c.order));
+  if (data && data.status === "APPROVED") {
+    const cap = await pp(env, "POST", "/v2/checkout/orders/" + encodeURIComponent(c.order) + "/capture", {}, "capture-" + claim);
+    if (cap.data && cap.data.status) data = cap.data;
+    else ({ data } = await pp(env, "GET", "/v2/checkout/orders/" + encodeURIComponent(c.order)));
+  }
+  if (!data || !data.status) return json({ ok: false, error: "pay_upstream" }, 502, cors);
+  if (data.status !== "COMPLETED") {
+    const st = ["CREATED", "SAVED", "PAYER_ACTION_REQUIRED", "APPROVED"].includes(data.status) ? "pending" : "failed";
+    return json({ ok: false, error: st, status: data.status }, 409, cors);
+  }
+  const pu = (data.purchase_units || [])[0] || {};
+  const capt = ((pu.payments || {}).captures || [])[0] || {};
+  const amt = capt.amount || pu.amount || {};
+  if (capt.status !== "COMPLETED" || amt.value !== PACK_PRICE || amt.currency_code !== PACK_CURRENCY) {
+    return json({ ok: false, error: capt.status === "PENDING" ? "pending" : "failed", status: capt.status || "" }, 409, cors);
+  }
+  /* Pago confirmado: crear el código con sus lecturas (una sola vez por pedido) */
+  const prev = await env.LIMITS.get("order:" + c.order);
+  const code = prev || newCode();
+  if (!prev) {
+    await env.LIMITS.put("cred:" + code, String(PACK_SIZE));
+    await env.LIMITS.put("order:" + c.order, code);
+    await env.LIMITS.put("sale:" + new Date().toISOString() + ":" + c.order, JSON.stringify({ ref: c.ref, amount: amt.value, currency: amt.currency_code, code, capture: capt.id || "" }));
+  }
+  c.code = code;
+  await env.LIMITS.put("claim:" + claim, JSON.stringify(c), { expirationTtl: 60 * 60 * 24 * 30 });
+  const left = parseInt((await env.LIMITS.get("cred:" + code)) || "0", 10);
+  return json({ ok: true, code, left, isNew: !prev }, 200, cors);
+}
+
+async function actionSales(env, cors) {
+  /* Solo con el código maestro: lista de ventas con el código de la embajadora (ref) */
+  const out = [];
+  let cursor;
+  do {
+    const r = await env.LIMITS.list({ prefix: "sale:", cursor });
+    for (const k of r.keys) { const v = await env.LIMITS.get(k.name); if (v) out.push({ date: k.name.slice(5, 29), ...JSON.parse(v) }); }
+    cursor = r.list_complete ? null : r.cursor;
+  } while (cursor && out.length < 1000);
+  return json({ ok: true, sales: out }, 200, cors);
 }
 
 /* ---------- entrada ---------- */
@@ -375,9 +516,8 @@ export default {
 
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
     if (origin && !allowedOrigins(env).includes(origin)) return json({ ok: false, error: "origin" }, 403, cors);
-    if (request.method === "GET") return json({ ok: true, ai: !!env.ANTHROPIC_API_KEY, limits: !!env.LIMITS, locked: env.OPEN !== "1" }, 200, cors);
+    if (request.method === "GET") return json({ ok: true, ai: !!env.ANTHROPIC_API_KEY, limits: !!env.LIMITS, locked: env.OPEN !== "1", pay: !!(env.PAYPAL_CLIENT_ID && env.PAYPAL_SECRET), mode: env.PAYPAL_MODE === "sandbox" ? "sandbox" : "live" }, 200, cors);
     if (request.method !== "POST") return json({ ok: false, error: "method" }, 405, cors);
-    if (!env.ANTHROPIC_API_KEY) return json({ ok: false, error: "disabled" }, 503, cors);
 
     const len = parseInt(request.headers.get("Content-Length") || "0", 10);
     if (len > MAX_BODY_BYTES) return json({ ok: false, error: "too_big" }, 413, cors);
@@ -387,13 +527,15 @@ export default {
     if (!body || typeof body !== "object") return json({ ok: false, error: "bad" }, 400, cors);
 
     const ip = request.headers.get("CF-Connecting-IP") || "anon";
-    if (!(await accessOk(body, env))) {
-      return json({ ok: false, error: "locked" }, 401, cors);
-    }
-    if (body.action === "check") return json({ ok: true }, 200, cors);
     try {
-      if (body.action === "read") return await actionRead(body, env, ip, cors);
-      if (body.action === "ui") return await actionUi(body, env, ip, cors);
+      if (body.action === "buy") return await actionBuy(body, env, ip, cors);
+      if (body.action === "claim") return await actionClaim(body, env, ip, cors);
+      const acc = await access(body, env);
+      if (body.action === "check") return acc ? json({ ok: true, left: acc.master ? -1 : acc.left }, 200, cors) : json({ ok: false, error: "locked" }, 401, cors);
+      if (body.action === "sales") return acc && acc.master && env.LIMITS ? await actionSales(env, cors) : json({ ok: false, error: "locked" }, 401, cors);
+      if (!env.ANTHROPIC_API_KEY) return json({ ok: false, error: "disabled" }, 503, cors);
+      if (body.action === "read") return await actionRead(body, env, ip, cors, acc);
+      if (body.action === "ui") return await actionUi(body, env, ip, cors, acc);
     } catch (e) {
       return json({ ok: false, error: "server" }, 500, cors);
     }

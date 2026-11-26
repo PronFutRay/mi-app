@@ -65,6 +65,11 @@ it: {
   cf_high: "sicuro", cf_medium: "probabile", cf_low: "incerto", sec_warn: "Da controllare", sec_more: "Altre voci spiegate",
   code_t: "Codice di accesso", code_p: "Inserisci il codice per attivare la lettura intelligente su questo telefono.",
   code_ok: "Lettura intelligente attivata ✓", code_bad: "Codice non valido.",
+  buy_t: "Lettura intelligente", buy_p: "{n} letture intelligenti per {p}. Paghi in modo sicuro con PayPal o con carta. Le letture restano su questo telefono e non scadono.",
+  buy_ok: "Paga {p}", buy_have: "Ho già un codice", buy_wait: "Apro PayPal…", buy_short: "{n} letture: {p}",
+  paid_t: "Pagamento riuscito ✓", paid_p: "Hai {n} letture intelligenti. Questo è il tuo codice: salvalo per usarlo su un altro telefono.", paid_copy: "Copia codice",
+  left: "Letture intelligenti rimaste: {n}", pay_cancel: "Pagamento annullato.", pay_pending: "Pagamento non ancora confermato. Riprova tra un momento.",
+  pay_err: "Pagamento non completato. Se ti è stato addebitato, scrivici.", lang_na: "Questa lingua non è ancora disponibile.",
   lang_load: "Traduco l'app…", lang_err: "Traduzione non disponibile ora. Riprova più tardi.",
   sum_title: "Riepilogo busta paga"
 },
@@ -128,6 +133,11 @@ es: {
   cf_high: "seguro", cf_medium: "probable", cf_low: "incierto", sec_warn: "Para revisar", sec_more: "Otras líneas explicadas",
   code_t: "Código de acceso", code_p: "Escribe el código para activar la lectura inteligente en este móvil.",
   code_ok: "Lectura inteligente activada ✓", code_bad: "Código no válido.",
+  buy_t: "Lectura inteligente", buy_p: "{n} lecturas inteligentes por {p}. Pagas de forma segura con PayPal o con tarjeta. Las lecturas se quedan en este móvil y no caducan.",
+  buy_ok: "Pagar {p}", buy_have: "Ya tengo un código", buy_wait: "Abriendo PayPal…", buy_short: "{n} lecturas: {p}",
+  paid_t: "Pago completado ✓", paid_p: "Tienes {n} lecturas inteligentes. Este es tu código: guárdalo para usarlo en otro móvil.", paid_copy: "Copiar código",
+  left: "Lecturas inteligentes restantes: {n}", pay_cancel: "Pago cancelado.", pay_pending: "Pago aún no confirmado. Inténtalo de nuevo en un momento.",
+  pay_err: "Pago no completado. Si te lo han cobrado, escríbenos.", lang_na: "Este idioma aún no está disponible.",
   lang_load: "Traduciendo la app…", lang_err: "Traducción no disponible ahora. Inténtalo más tarde.",
   sum_title: "Resumen de la busta paga"
 }};
@@ -135,7 +145,7 @@ es: {
 /* ---- idiomas: IT y ES incluidos; los demás los traduce la IA una vez y se guardan en el móvil ---- */
 var CFG = window.BC_CONFIG || {};
 var AI = String(CFG.AI_URL || "").trim().replace(/\/+$/, "");
-var UI_VER = "v1";
+var UI_VER = "v2";
 var CODES = ["it", "es", "en", "fr", "de", "pt", "ro", "sq", "uk", "ru", "pl", "bg", "cs", "sk", "hu", "hr", "sr", "bs", "mk", "sl", "el",
   "nl", "sv", "da", "no", "fi", "lt", "lv", "et", "tr", "ar", "fa", "he", "ur", "hi", "pa", "bn", "ta", "si", "ne", "ml", "te", "gu", "mr",
   "zh", "ja", "ko", "vi", "th", "id", "ms", "tl", "am", "ti", "so", "sw", "ha", "yo", "ig", "wo", "ka", "hy", "az", "uz", "kk"];
@@ -172,6 +182,10 @@ function applyLang() {
   document.documentElement.dir = RTL.indexOf(LANG) >= 0 ? "rtl" : "ltr";
   ["tag", "up_title", "up_sub", "bPhoto", "bFile", "drop", "bDemo", "priv", "prog_t", "disc", "pw_t", "pw_p", "ai_first_t", "ai_first_p", "ai_c_t", "ai_c_p"].forEach(function (k) { var e = $(k); if (e) e.textContent = t(k); });
   if (aiOn()) $("priv").textContent = t("priv_ai");
+  if (aiOn()) $("ai_first_p").textContent = t("ai_first_p") + " " + (hasCode() ? (aiLeft() >= 0 ? fill(t("left"), { n: aiLeft() }) : "") : fill(t("buy_short"), { n: PACK, p: PRICE }));
+  $("buy_t").textContent = t("buy_t"); $("buy_p").textContent = fill(t("buy_p"), { n: PACK, p: PRICE });
+  $("buyOk").textContent = fill(t("buy_ok"), { p: PRICE }); $("buyNo").textContent = t("pw_no"); $("buyHave").textContent = t("buy_have");
+  $("paid_t").textContent = t("paid_t"); $("paidCopy").textContent = t("paid_copy");
   $("aiBox").classList.toggle("hidden", !aiOn());
   $("bCancel").textContent = t("pw_no");
   $("pwOk").textContent = t("pw_ok"); $("pwNo").textContent = t("pw_no");
@@ -202,7 +216,7 @@ async function setLang(l) {
       if (langBusy) return;
       langBusy = true; $("langSel").disabled = true; toast(t("lang_load") + " " + nativeName(l), 120000);
       try { T[l] = unflat(await translateUi(l)); }
-      catch (e) { toast(t("lang_err")); $("langSel").value = LANG; return; }
+      catch (e) { toast(e && e.message === "locked" ? t("lang_na") : t("lang_err")); $("langSel").value = LANG; return; }
       finally { langBusy = false; $("langSel").disabled = false; }
       hideToast();
     } else { $("langSel").value = LANG; return; }
@@ -219,15 +233,61 @@ function hideToast() { clearTimeout(toastTm); $("toast").classList.remove("show"
 /* Modo privado: la IA solo se activa en móviles donde se ha puesto el código de acceso.
    Para meterlo: toca 5 veces el logo de arriba, o abre la web con ?acceso=CODIGO */
 function aiCode() { try { return localStorage.getItem("bc.ai.code") || ""; } catch (e) { return ""; } }
-function aiOn() { return !!(AI && aiCode()); }
-function aiLock() { try { localStorage.removeItem("bc.ai.code"); } catch (e) {} fillLangSel(); applyLang(); }
+function aiOn() { return !!AI; }
+function hasCode() { return !!aiCode(); }
+function aiLeft() { try { var v = localStorage.getItem("bc.ai.left"); return v === null ? -1 : parseInt(v, 10); } catch (e) { return -1; } }
+function setLeft(n) { try { if (n == null || n < 0) localStorage.removeItem("bc.ai.left"); else localStorage.setItem("bc.ai.left", String(n)); } catch (e) {} }
+var PACK = CFG.PACK || 5, PRICE = CFG.PACK_PRICE || "2,99 €";
+function aiLock() { try { localStorage.removeItem("bc.ai.code"); localStorage.removeItem("bc.ai.left"); } catch (e) {} fillLangSel(); applyLang(); }
+function setCode(code, left) { try { localStorage.setItem("bc.ai.code", code); } catch (e) {} setLeft(left); fillLangSel(); applyLang(); }
+
+/* ---- compra de lecturas con PayPal ---- */
+function rnd(n) { var A = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789", a = new Uint8Array(n), s = ""; crypto.getRandomValues(a); for (var i = 0; i < n; i++) s += A[a[i] % A.length]; return s; }
+function payLocale() { return { it: "it-IT", es: "es-ES", en: "en-US", fr: "fr-FR", de: "de-DE", pt: "pt-PT" }[LANG]; }
+function refCode() { try { return localStorage.getItem("bc.ref") || ""; } catch (e) { return ""; } }
+function pending() { try { var p = JSON.parse(localStorage.getItem("bc.pay.claim") || "null"); return p && Date.now() - p.t < 3 * 864e5 ? p.c : null; } catch (e) { return null; } }
+function clearPending() { try { localStorage.removeItem("bc.pay.claim"); } catch (e) {} }
+function openBuy() { $("buyModal").classList.add("show"); }
+function closeBuy() { $("buyModal").classList.remove("show"); }
+$("buyNo").onclick = closeBuy;
+$("buyHave").onclick = function () { closeBuy(); askCode().then(function (c) { $("pwIn").type = "password"; $("pw_t").textContent = t("pw_t"); if (c) tryCode(c); }); };
+$("buyOk").onclick = async function () {
+  var btn = this, claim = rnd(28);
+  try { localStorage.setItem("bc.pay.claim", JSON.stringify({ c: claim, t: Date.now() })); } catch (e) {}
+  btn.disabled = true; toast(t("buy_wait"), 15000);
+  try {
+    var d = await aiPost({ action: "buy", claim: claim, ref: refCode(), ret: CFG.APP_URL || "", locale: payLocale() }, 30000);
+    closeBuy(); location.href = d.url;   /* en el APK se abre el navegador; al volver, las lecturas se activan solas */
+  } catch (e) { toast(t("pay_err") + " [" + (e.message || "") + "]", 6000); }
+  finally { btn.disabled = false; }
+};
+function showPaid(code, left) {
+  $("paidCode").textContent = code; $("paid_p").textContent = fill(t("paid_p"), { n: left });
+  $("paidModal").classList.add("show");
+}
+$("paidOk").onclick = function () { $("paidModal").classList.remove("show"); };
+$("paidCopy").onclick = function () { copyText($("paidCode").textContent); };
+var claiming = false;
+async function claimCheck(claim, loud) {
+  if (!claim || claiming || !AI) return;
+  claiming = true;
+  try {
+    var d = await aiPost({ action: "claim", claim: claim }, 30000);
+    clearPending(); setCode(d.code, d.left); showPaid(d.code, d.left);
+  } catch (e) {
+    var m = e && e.message;
+    if (m === "pending") { if (loud) toast(t("pay_pending"), 6000); }
+    else if (m === "failed" || m === "unknown") { clearPending(); if (loud) toast(t("pay_err"), 6000); }
+    else if (loud) toast(t("pay_err") + " [" + (m || "") + "]", 6000);
+  } finally { claiming = false; }
+}
+document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible" && pending()) claimCheck(pending(), false); });
 async function tryCode(code) {
   code = String(code || "").trim().toUpperCase();
   if (!code || !AI) return;
   try {
-    await aiPost({ action: "check", code: code }, 20000);
-    try { localStorage.setItem("bc.ai.code", code); } catch (e) {}
-    fillLangSel(); applyLang(); toast(t("code_ok"), 3500);
+    var d = await aiPost({ action: "check", code: code }, 20000);
+    setCode(code, d.left); toast(t("code_ok") + (d.left >= 0 ? " · " + fill(t("left"), { n: d.left }) : ""), 4000);
   } catch (e) { toast(t("code_bad") + (e && e.message && e.message !== "locked" ? " [" + e.message + "]" : ""), 3500); }
 }
 function askCode() {
@@ -248,7 +308,7 @@ async function aiPost(body, ms) {
     body.code = body.code || aiCode();
     var resp = await fetch(AI, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal: ctl ? ctl.signal : undefined });
     var data = await resp.json().catch(function () { return null; });
-    if (data && data.error === "locked" && body.action !== "check") { aiLock(); }
+    if (data && data.error === "locked" && body.action !== "check" && hasCode()) { aiLock(); }
     if (!data || !data.ok) { var er = new Error((data && data.error) || "http" + resp.status); er.detail = data ? [data.status, data.reason, data.message].filter(Boolean).join(" ") : ""; throw er; }
     return data;
   } finally { clearTimeout(tm); }
@@ -324,6 +384,7 @@ var aiErr = "";
 async function runAi(files, hint) {
   aiErr = "";
   if (!aiOn() || !files || !files.length) return;
+  if (!hasCode() || aiLeft() === 0) { openBuy(); return; }
   if (!(await aiConsent())) return;
   var mine = ++runId, fake = null; my = mine;
   $("out").classList.add("hidden"); $("upload").classList.add("hidden"); showProg(true); setStatus(t("st_prep"), 0.05);
@@ -337,7 +398,9 @@ async function runAi(files, hint) {
     if (mine !== runId) return;
     var res = fromAi(data.result);
     setStatus(t("st_an"), 1);
+    if (typeof data.left === "number" && data.left >= 0) { setLeft(data.left); applyLang(); }
     finish(hint || lastText, res);
+    if (typeof data.left === "number" && data.left >= 0) toast(fill(t("left"), { n: data.left }), 3500);
     if (!res.ai.payslip) toast(t("ai_not"), 4000);
   } catch (e) {
     clearInterval(fake);
@@ -346,6 +409,7 @@ async function runAi(files, hint) {
     if (last) $("out").classList.remove("hidden"); else $("upload").classList.remove("hidden");
     var code = e && e.message ? e.message : "";
     if (e && e.name === "AbortError") code = "timeout";
+    if (code === "no_credits") { setLeft(0); applyLang(); if (last) render(last); openBuy(); return; }
     var msg = code === "limit" || code === "limit_global" ? t("ai_limit") : code === "too_big" ? t("ai_big") : t("ai_err");
     aiErr = msg + " [" + (code + (e && e.detail ? " · " + e.detail : "")).slice(0, 160) + "]";
     if (last) render(last);
@@ -793,6 +857,14 @@ function copySummary() {
 fillLangSel();
 applyLang();
 if (wantLang && aiOn()) setLang(wantLang);
+try {
+  var qp = new URLSearchParams(location.search), pst = qp.get("paypal"), pcl = qp.get("claim");
+  if (pst) {
+    history.replaceState(null, "", location.pathname);
+    if (pst === "ok" && pcl) claimCheck(pcl, true);
+    else { if (pcl && pcl === pending()) clearPending(); toast(t("pay_cancel"), 3500); }
+  } else if (pending()) claimCheck(pending(), false);
+} catch (e) {}
 try { var qc = new URLSearchParams(location.search).get("acceso"); if (qc) { history.replaceState(null, "", location.pathname); tryCode(qc); } } catch (e) {}
 window.__bcReady = true;
 window.__BC = { handleFiles: handleFiles, finish: finish, lang: function () { return LANG; }, toast: toast, shareSummary: function () {

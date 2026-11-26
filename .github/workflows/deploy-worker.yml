@@ -19,7 +19,13 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           ANTHROPIC_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          PP_ID: ${{ secrets.PAYPAL_CLIENT_ID }}
+          PP_SECRET: ${{ secrets.PAYPAL_SECRET }}
+          PP_MODE: ${{ secrets.PAYPAL_MODE }}
         run: |
+          for v in PP_ID PP_SECRET PP_MODE; do
+            x=$(printf '%s' "${!v}" | tr -d '[:space:]'); [ -n "$x" ] && echo "::add-mask::$x"; echo "$v=$x" >> "$GITHUB_ENV"
+          done
           # quitar espacios o saltos de línea que se cuelan al pegar desde el móvil
           T=$(printf '%s' "$CLOUDFLARE_API_TOKEN" | tr -d '[:space:]'); echo "::add-mask::$T"
           # el ID de cuenta son 32 caracteres hexadecimales; si se pegó la dirección entera, se extrae de ahí
@@ -70,6 +76,13 @@ jobs:
             printf '%s' "$ANTHROPIC_KEY" | wrangler secret put ANTHROPIC_API_KEY
           else
             echo "::warning::No hay secreto ANTHROPIC_API_KEY en GitHub: la IA queda apagada hasta que lo añadas"
+          fi
+          if [ -n "$PP_ID" ] && [ -n "$PP_SECRET" ]; then
+            printf '%s' "$PP_ID" | wrangler secret put PAYPAL_CLIENT_ID
+            printf '%s' "$PP_SECRET" | wrangler secret put PAYPAL_SECRET
+            printf '%s' "${PP_MODE:-live}" | wrangler secret put PAYPAL_MODE
+          else
+            echo "::warning::Sin PAYPAL_CLIENT_ID / PAYPAL_SECRET: el cobro queda apagado"
           fi
       - name: Comprobar
         run: |

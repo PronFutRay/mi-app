@@ -9,5 +9,7 @@ window.BC_CONFIG = {
   /* Lectura inteligente (Claude). Pega aquí la dirección de tu Worker de Cloudflare,
      ej.: "https://busta-chiara.TU-NOMBRE.workers.dev". Vacío = función oculta. */
   AI_URL: "https://busta-chiara.raul-ronaldinio1.workers.dev",
+  PACK: 5,               // lecturas inteligentes por paquete (debe coincidir con el servidor)
+  PACK_PRICE: "2,99 €",  // precio del paquete (el importe real lo fija el servidor)
   UNLOCK_HASH: "b96701026565ee2b9d498e8c8a8e741aa66f9587e42bbae4d72b17a04f80fd15"   // huella del código de desbloqueo (el código lo das tras el pago)
 };
