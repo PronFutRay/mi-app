@@ -1,0 +1,41 @@
+name: Deploy Galaxia.io (servidor online)
+
+on:
+  push:
+    branches: [main]
+    paths: ["galaxia/src/**", "galaxia/client/**", "galaxia/build.py", "galaxia/wrangler.toml", ".github/workflows/deploy-galaxia.yml"]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: galaxia
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Preparar credenciales de Cloudflare
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          T=$(printf '%s' "$CLOUDFLARE_API_TOKEN" | tr -d '[:space:]'); echo "::add-mask::$T"
+          A=$(printf '%s' "$CLOUDFLARE_ACCOUNT_ID" | tr 'A-F' 'a-f' | grep -oE '[0-9a-f]{32}' | head -1 || true)
+          if [ -z "$T" ]; then echo "::error::Falta el secreto CLOUDFLARE_API_TOKEN"; exit 1; fi
+          { echo "CLOUDFLARE_API_TOKEN=$T"; echo "CLOUDFLARE_ACCOUNT_ID=$A"; } >> "$GITHUB_ENV"
+          npm i -g wrangler@4 >/dev/null 2>&1 && wrangler --version
+      - name: Construir y publicar
+        run: |
+          [ -z "$CLOUDFLARE_ACCOUNT_ID" ] && unset CLOUDFLARE_ACCOUNT_ID
+          python3 build.py
+          wrangler deploy
+      - name: Comprobar
+        working-directory: .
+        run: |
+          sleep 8
+          code=$(curl -s -o /dev/null -w "%{http_code}" https://galaxia-io.raul-ronaldinio1.workers.dev/)
+          echo "Estado de la página: $code"
+          [ "$code" = "200" ] || { echo "::warning::La página no responde 200 todavía"; }

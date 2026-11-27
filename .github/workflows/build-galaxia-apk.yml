@@ -1,0 +1,57 @@
+name: Build Galaxia.io APK
+
+on:
+  push:
+    branches: [main]
+    paths: ["galaxia/**", ".github/workflows/build-galaxia-apk.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Compilar APK
+        run: |
+          set -e
+          python3 galaxia/build.py wss://galaxia-io.raul-ronaldinio1.workers.dev/ws
+          W=/tmp/gx; rm -rf $W; cp -r galaxia/apk $W; cd $W
+          npm install --no-audit --no-fund
+          printf '{ "appId": "com.pronfutray.galaxia", "appName": "Galaxia.io", "webDir": "www" }\n' > capacitor.config.json
+          mkdir -p www && cp $GITHUB_WORKSPACE/galaxia/dist/index.html www/
+          npx cap add android
+          sed -i '0,/^android {/s##android {\n    signingConfigs { debug { storeFile file(System.getenv("GITHUB_WORKSPACE") + "/android-signing/debug.keystore"); storePassword "android"; keyAlias "androiddebugkey"; keyPassword "android" } }#' android/app/build.gradle
+          R=android/app/src/main/res; rm -rf $R/mipmap-anydpi-v26
+          for s in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do
+            d=${s%%:*}; px=${s##*:}; mkdir -p $R/mipmap-$d
+            ( magick $GITHUB_WORKSPACE/galaxia/icon-512.png -resize ${px}x${px} $R/mipmap-$d/ic_launcher.png \
+              || convert $GITHUB_WORKSPACE/galaxia/icon-512.png -resize ${px}x${px} $R/mipmap-$d/ic_launcher.png ) 2>/dev/null \
+              || cp $GITHUB_WORKSPACE/galaxia/icon-512.png $R/mipmap-$d/ic_launcher.png
+            cp $R/mipmap-$d/ic_launcher.png $R/mipmap-$d/ic_launcher_round.png
+            cp $R/mipmap-$d/ic_launcher.png $R/mipmap-$d/ic_launcher_foreground.png
+          done
+          npx cap sync android
+          (cd android && ./gradlew assembleDebug)
+          cp android/app/build/outputs/apk/debug/app-debug.apk $GITHUB_WORKSPACE/Galaxia.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Galaxia-apk
+          path: Galaxia.apk
+      - name: Publicar en Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: galaxia-v1.${{ github.run_number }}
+          name: Galaxia.io v1.${{ github.run_number }}
+          body: Descarga **Galaxia.apk** e instálalo en Android para probar el juego online (acepta "instalar apps desconocidas").
+          files: Galaxia.apk
+          make_latest: false
