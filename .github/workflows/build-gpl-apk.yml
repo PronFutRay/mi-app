@@ -1,0 +1,73 @@
+name: Build GPL Calc APK
+
+on:
+  push:
+    branches: [main]
+    paths: ['gpl-calc/**', 'gpl-calc-it/**', 'gpl-icons/**', 'gpl-apk/**', '.github/workflows/build-gpl-apk.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Compilar las dos versiones (IT y ES)
+        run: |
+          set -e
+          build() {   # carpeta  appId  nombre  archivo
+            SRC=$1; ID=$2; NAME="$3"; OUT=$4
+            W=/tmp/b-$SRC; rm -rf $W; cp -r gpl-apk $W; cd $W
+            npm install --no-audit --no-fund
+            printf '{ "appId": "%s", "appName": "%s", "webDir": "www" }\n' "$ID" "$NAME" > capacitor.config.json
+            mkdir -p www/gpl-icons
+            cp $GITHUB_WORKSPACE/$SRC/index.html $GITHUB_WORKSPACE/$SRC/manifest.webmanifest www/
+            cp $GITHUB_WORKSPACE/gpl-icons/* www/gpl-icons/
+            cp node_modules/jspdf/dist/jspdf.umd.min.js www/
+            npx cap add android
+            M=android/app/src/main/AndroidManifest.xml
+            sed -i 's#</manifest>#    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />\n</manifest>#' "$M"
+            R=android/app/src/main/res
+            rm -rf $R/mipmap-anydpi-v26
+            for s in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do
+              d=${s%%:*}; px=${s##*:}; mkdir -p $R/mipmap-$d
+              ( magick www/gpl-icons/icon-512.png -resize ${px}x${px} $R/mipmap-$d/ic_launcher.png \
+                || convert www/gpl-icons/icon-512.png -resize ${px}x${px} $R/mipmap-$d/ic_launcher.png ) 2>/dev/null \
+                || cp www/gpl-icons/icon-512.png $R/mipmap-$d/ic_launcher.png
+              cp $R/mipmap-$d/ic_launcher.png $R/mipmap-$d/ic_launcher_round.png
+              cp $R/mipmap-$d/ic_launcher.png $R/mipmap-$d/ic_launcher_foreground.png
+            done
+            npx cap sync android
+            (cd android && ./gradlew assembleDebug)
+            cp android/app/build/outputs/apk/debug/app-debug.apk $GITHUB_WORKSPACE/$OUT
+            cd $GITHUB_WORKSPACE
+          }
+          build gpl-calc-it com.pronfutray.gplcalc.it "GPL Calc" GPLCalc-IT.apk
+          build gpl-calc    com.pronfutray.gplcalc    "GPL Calc ES" GPLCalc-ES.apk
+          ls -la *.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GPLCalc-apk
+          path: "*.apk"
+
+      - name: Publicar en Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: gpl-v1.${{ github.run_number }}
+          name: GPL Calc v1.${{ github.run_number }}
+          body: Descarga **GPLCalc-IT.apk** (italiano) o **GPLCalc-ES.apk** (español) e instálalo en Android (acepta "instalar apps desconocidas").
+          files: |
+            GPLCalc-IT.apk
+            GPLCalc-ES.apk
+          make_latest: false

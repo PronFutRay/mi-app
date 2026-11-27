@@ -307,7 +307,43 @@ $("copy").onclick=function(){
   (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){toast("Resumen copiado")},function(){
     var a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();try{document.execCommand("copy");toast("Resumen copiado")}catch(e){}a.remove()});
 };
+/* ---------- APK (Android): guardar/compartir archivos ---------- */
+var NATIVE=!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
+function nativeShare(name,b64,mime){
+  var P=window.Capacitor.Plugins;
+  return P.Filesystem.writeFile({path:name,data:b64,directory:"CACHE"}).then(function(w){
+    return P.Share.share({title:name,url:w.uri,dialogTitle:name});
+  }).catch(function(e){if(!/cancel/i.test(String(e&&e.message)))toast("No se pudo exportar el archivo")});
+}
+function loadJsPDF(){return window.jspdf?Promise.resolve():new Promise(function(ok,ko){var s=document.createElement("script");s.src="jspdf.umd.min.js";s.onload=ok;s.onerror=ko;document.head.appendChild(s)})}
+function reportToPDF(name){   /* dibuja el informe (#report) como PDF de texto */
+  return loadJsPDF().then(function(){
+    var doc=new window.jspdf.jsPDF({unit:"mm",format:"a4"}),y=16,W=180,X=15;
+    function room(h){if(y+h>285){doc.addPage();y=16}}
+    function txt(e){return (e.textContent||"").replace(/\s+/g," ").trim()}
+    Array.prototype.forEach.call($("report").children,function(el){
+      var tag=el.tagName;
+      if(tag==="H1"){doc.setFont("helvetica","bold");doc.setFontSize(15);doc.setTextColor(0);var L=doc.splitTextToSize(txt(el),W);room(L.length*7);doc.text(L,X,y);y+=L.length*7}
+      else if(tag==="H2"){y+=4;room(8);doc.setFont("helvetica","bold");doc.setFontSize(12);doc.setTextColor(0);doc.text(txt(el),X,y);y+=6}
+      else if(tag==="TABLE"){
+        var rows=el.querySelectorAll("tr");
+        rows.forEach(function(tr){
+          var cells=tr.querySelectorAll("td,th"),n=cells.length,cw=n===2?[110,70]:[38,40,20,16,22,22,22];
+          var head=tr.querySelector("th")||tr.querySelector("b");
+          doc.setFont("helvetica",head?"bold":"normal");doc.setFontSize(n===2?10:8.5);doc.setTextColor(0);
+          var lines=[],h=0,x=X;
+          cells.forEach(function(c,i){var t=doc.splitTextToSize(txt(c),(cw[i]||20)-2);lines.push(t);h=Math.max(h,t.length)});
+          room(h*4.6+2);
+          lines.forEach(function(t,i){doc.text(t,x,y);x+=cw[i]||20});
+          y+=h*4.6+1.5;doc.setDrawColor(225);doc.line(X,y-3,X+W,y-3);
+        });
+      } else {doc.setFont("helvetica","normal");doc.setFontSize(9);doc.setTextColor(110);var L2=doc.splitTextToSize(txt(el),W);room(L2.length*4.5);doc.text(L2,X,y+2);y+=L2.length*4.5+3}
+    });
+    return nativeShare(name+".pdf",doc.output("datauristring").split(",")[1],"application/pdf");
+  });
+}
 function dl(name,text,type){
+  if(NATIVE){nativeShare(name,btoa(unescape(encodeURIComponent(text))),type.split(";")[0]);return}
   var b=new Blob([text],{type:type});
   var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();a.remove();
 }
@@ -338,8 +374,9 @@ function exportPDF(){
       h+="<tr><td>"+d.toLocaleDateString("es-ES")+" "+d.toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"})+"</td><td>"+esc(e.das||"—")+"</td><td>"+fmt(e.L,1)+"</td><td>"+fmt(e.T,1)+"</td><td>"+fmt(e.kg,2)+"</td><td>"+fmt(e.kwh,1)+"</td><td>"+(e.cost!=null?fmt(e.cost,2):"—")+"</td></tr>"});
     h+="</tbody></table>";
   }
-  h+='<p class="sub" style="margin-top:18px">Valores estimados con densidades típicas de propano y butano. Uso informativo.</p>';
+  h+='<p class="sub" style="margin-top:18px">Cálculo con la densidad a 15 °C del DAS corregida por temperatura. Uso informativo.</p>';
   $("report").innerHTML=h;
+  if(NATIVE){reportToPDF("informe-gpl-"+now.toISOString().slice(0,10)).catch(function(){toast("No se pudo exportar el archivo")});return}
   var old=document.title;document.title="informe-gpl-"+now.toISOString().slice(0,10);
   window.addEventListener("afterprint",function f(){document.title=old;window.removeEventListener("afterprint",f)});
   setTimeout(function(){window.print()},50);
