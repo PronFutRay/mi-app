@@ -107,6 +107,10 @@ th{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.
       <label class="label" for="das">Nº de DAS (opcional)</label>
       <input id="das" placeholder="Ej. 26IT0000000000" autocomplete="off" autocapitalize="characters" maxlength="40">
     </div>
+    <div class="das">
+      <label class="label" for="rho15">Densidad a 15 °C (kg/L) · del DAS</label>
+      <input id="rho15" type="number" step="0.0001" min="0.45" max="0.65" value="0.5040" inputmode="decimal">
+    </div>
   </section>
 
   <section class="card">
@@ -143,7 +147,6 @@ th{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.
     <details class="adv-d">
       <summary>Ajustes opcionales</summary>
       <div class="adv">
-        <div><label>Composición: <b id="pLbl">50</b>% propano / <b id="bLbl">50</b>% butano</label><input type="range" id="prop" min="0" max="100" step="5" value="50"></div>
         <div><label>Precio por litro (€)</label><input type="number" id="price" step="0.001" min="0" placeholder="ej. 0,72"></div>
         <div><label>Consumo (L/100 km)</label><input type="number" id="cons" step="0.1" min="0" placeholder="ej. 9"></div>
         <div><label>Límite de llenado del depósito (%)</label><input type="number" id="fill" step="1" min="50" max="100" value="80"></div>
@@ -159,7 +162,7 @@ th{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.
     <div class="tbl" id="hist"></div>
   </section>
 
-  <p class="foot">Valores estimados con densidades típicas de propano (0,507 kg/L) y butano (0,579 kg/L) a 15 °C. Para uso informativo; no sustituye al medidor del surtidor.<br>Por <a href="https://github.com/PronFutRay" style="color:inherit">PronFutRay</a></p>
+  <p class="foot">Cálculo con la densidad a 15 °C indicada en el DAS (por defecto 0,5040 kg/L) corregida por temperatura. Para uso informativo; no sustituye al medidor del surtidor.<br>Por <a href="https://github.com/PronFutRay" style="color:inherit">PronFutRay</a></p>
   <div class="tiny">Raul</div>
 </main>
 <div id="report"></div>
@@ -170,7 +173,7 @@ th{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.
 "use strict";
 var $=function(i){return document.getElementById(i)};
 var KEY="gplcalc.v1";
-var S={p:50,price:"",cons:"",fill:80,city:null,lastTemp:null,hist:[]};
+var S={p:50,rho15:"0.5040",price:"",cons:"",fill:80,city:null,lastTemp:null,hist:[]};
 try{var raw=JSON.parse(localStorage.getItem(KEY)||"null");if(raw)for(var k in raw)S[k]=raw[k];}catch(e){}
 function persist(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 var T={val:15,src:"default",label:""};
@@ -182,9 +185,9 @@ function toast(m){var t=$("toast");t.textContent=m;t.classList.add("show");setTi
 /* ---------- Física ---------- */
 var RHO_P=0.507,RHO_B=0.579,BETA_P=0.0030,BETA_B=0.0020,KWH_P=12.88,KWH_B=12.69,M_P=44.1,M_B=58.12;
 function psat(a,b,c,t){return Math.pow(10,a-b/(c+t))*0.00133322} // bar abs
-function compute(L,temp,pPct,fillPct,price,cons){
-  var p=pPct/100,b=1-p;
-  var rho15=p*RHO_P+b*RHO_B;
+function compute(L,temp,rho15,fillPct,price,cons){
+  /* densidad de referencia a 15 °C (del DAS); la mezcla propano/butano se estima a partir de ella */
+  var p=Math.min(1,Math.max(0,(RHO_B-rho15)/(RHO_B-RHO_P))),b=1-p,pPct=Math.round(p*100);
   var beta=p*BETA_P+b*BETA_B;
   var rho=rho15*(1-beta*(temp-15));
   var kg=L*rho;
@@ -208,15 +211,14 @@ function render(){
   var L=readL();
   var price=parseFloat($("price").value)||0,cons=parseFloat($("cons").value)||0;
   var fill=parseFloat($("fill").value)||80;
-  var p=+$("prop").value;
-  $("pLbl").textContent=p;$("bLbl").textContent=100-p;
+  var rr=parseFloat(String($("rho15").value).replace(",","."));if(!(rr>0.45&&rr<0.65))rr=0.504;
   var temp=parseFloat($("temp").value);if(!isFinite(temp))temp=15;
   if(!L){last=null;$("kg").textContent="—";$("heroSide").textContent="Introduce los litros para empezar";$("grid").innerHTML='<div class="empty">Los resultados aparecerán aquí.</div>';return}
-  var r=compute(L,temp,p,fill,price,cons);last={L:L,T:temp,r:r};
+  var r=compute(L,temp,rr,fill,price,cons);last={L:L,T:temp,r:r};
   $("kg").textContent=fmt(r.kg,2);
-  $("heroSide").innerHTML=fmt(L,1)+' L a '+fmt(temp,1)+' °C<br>Densidad '+fmt(r.rho,3)+' kg/L';
+  $("heroSide").innerHTML=fmt(L,1)+' L a '+fmt(temp,1)+' °C<br>Densidad '+fmt(r.rho,4)+' kg/L';
   cur=[];var h="";
-  h+=card("Densidad a "+fmt(temp,1)+" °C",fmt(r.rho,3),"kg/L","Referencia a 15 °C: "+fmt(r.rho15,3));
+  h+=card("Densidad a "+fmt(temp,1)+" °C",fmt(r.rho,4),"kg/L","Referencia a 15 °C: "+fmt(r.rho15,4));
   h+=card("Volumen a 15 °C",fmt(r.v15,1),"L",(r.dv>=0?"+":"")+fmt(r.dv,1)+" L vs. volumen real");
   h+=card("Energía",fmt(r.kwh,1),"kWh","≈ "+fmt(r.kwh*3.6,0)+" MJ (PCI)");
   h+=card("Presión del depósito",fmt(r.pg,1),"bar","Manométrica aprox. a esa temperatura");
@@ -282,8 +284,8 @@ function renderHist(){
 
 /* ---------- Eventos ---------- */
 $("liters").addEventListener("input",render);
-["prop","price","cons","fill"].forEach(function(id){$(id).addEventListener("input",function(){
-  S.p=+$("prop").value;S.price=$("price").value;S.cons=$("cons").value;S.fill=$("fill").value;persist();render()})});
+["rho15","price","cons","fill"].forEach(function(id){$(id).addEventListener("input",function(){
+  S.rho15=$("rho15").value;S.price=$("price").value;S.cons=$("cons").value;S.fill=$("fill").value;persist();render()})});
 $("temp").addEventListener("input",function(){var v=parseFloat($("temp").value);if(isFinite(v)){T={val:v,src:"manual"};$("tsrc").className="badge";$("tsrc").textContent="Manual";render()}});
 $("minus").onclick=function(){var v=Math.max(0,readL()-1);$("liters").value=v||"";render()};
 $("plus").onclick=function(){$("liters").value=readL()+1;render()};
@@ -297,7 +299,7 @@ $("save").onclick=function(){
 };
 $("copy").onclick=function(){
   if(!last){toast("Introduce primero los litros");return}
-  var r=last.r,t=($("das").value.trim()?"DAS nº "+$("das").value.trim()+"\n":"")+"Carga GPL: "+fmt(last.L,1)+" L a "+fmt(last.T,1)+" °C\nMasa: "+fmt(r.kg,2)+" kg\nDensidad: "+fmt(r.rho,3)+" kg/L\nVolumen a 15 °C: "+fmt(r.v15,1)+" L\nEnergía: "+fmt(r.kwh,1)+" kWh\nCO2: "+fmt(r.co2,1)+" kg"+(r.cost!=null?"\nCoste: "+fmt(r.cost,2)+" €":"");
+  var r=last.r,t=($("das").value.trim()?"DAS nº "+$("das").value.trim()+"\n":"")+"Carga GPL: "+fmt(last.L,1)+" L a "+fmt(last.T,1)+" °C\nMasa: "+fmt(r.kg,2)+" kg\nDensidad: "+fmt(r.rho,4)+" kg/L\nVolumen a 15 °C: "+fmt(r.v15,1)+" L\nEnergía: "+fmt(r.kwh,1)+" kWh\nCO2: "+fmt(r.co2,1)+" kg"+(r.cost!=null?"\nCoste: "+fmt(r.cost,2)+" €":"");
   (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){toast("Resumen copiado")},function(){
     var a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();try{document.execCommand("copy");toast("Resumen copiado")}catch(e){}a.remove()});
 };
@@ -322,7 +324,7 @@ function exportPDF(){
   var dasV=$("das").value.trim(),now=new Date(),h='<h1>GPL Calc · Informe de carga'+(dasV?' <span class="das-t">· DAS nº '+esc(dasV)+'</span>':'')+'</h1><div class="sub">Generado el '+now.toLocaleDateString("es-ES",{day:"2-digit",month:"long",year:"numeric"})+" a las "+now.toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"})+"</div>";
   if(last){
     h+="<h2>Carga actual</h2><table><tbody>";
-    h+="<tr><td>Litros cargados</td><td>"+fmt(last.L,1)+" L</td></tr><tr><td>Temperatura ambiente</td><td>"+fmt(last.T,1)+" °C</td></tr><tr><td>Composición</td><td>"+last.r.pP+" % propano / "+(100-last.r.pP)+" % butano</td></tr><tr><td><b>Masa de GPL</b></td><td><b>"+fmt(last.r.kg,2)+" kg</b></td></tr>";
+    h+="<tr><td>Litros cargados</td><td>"+fmt(last.L,1)+" L</td></tr><tr><td>Temperatura ambiente</td><td>"+fmt(last.T,1)+" °C</td></tr><tr><td>Densidad a 15 °C (DAS)</td><td>"+fmt(last.r.rho15,4)+" kg/L</td></tr><tr><td><b>Masa de GPL</b></td><td><b>"+fmt(last.r.kg,2)+" kg</b></td></tr>";
     cur.forEach(function(r){h+="<tr><td>"+esc(r[0])+"</td><td>"+esc(r[1])+"</td></tr>"});
     h+="</tbody></table>";
   }
@@ -342,7 +344,7 @@ $("pdf").onclick=exportPDF;$("pdf2").onclick=exportPDF;
 $("clear").onclick=function(){if(S.hist.length&&confirm("¿Borrar todo el historial?")){S.hist=[];persist();renderHist()}};
 
 /* ---------- Inicio ---------- */
-$("prop").value=S.p;$("price").value=S.price;$("cons").value=S.cons;$("fill").value=S.fill;
+$("rho15").value=S.rho15||"0.5040";$("price").value=S.price;$("cons").value=S.cons;$("fill").value=S.fill;
 renderHist();render();
 if(S.city){fetchTemp(S.city.lat,S.city.lon,S.city.name);$("city").value=S.city.name}else geolocate();
 $("liters").focus();
