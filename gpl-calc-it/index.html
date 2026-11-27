@@ -9,11 +9,11 @@
 <link rel="icon" type="image/svg+xml" href="../gpl-icons/icon.svg">
 <link rel="icon" type="image/png" sizes="32x32" href="../gpl-icons/favicon-32.png">
 <link rel="apple-touch-icon" href="../gpl-icons/apple-touch-icon.png">
-<title>GPL Calc · Consegne GPL</title>
+<title>GPL Calc · Calcolatore di carico</title>
 <style>
 :root{
   --bg:#f2f5f9;--card:#fff;--ink:#0b1f3a;--muted:#5d6b82;--line:#e2e8f0;
-  --brand:#ff6a1a;--brand2:#ff9a3d;--navy:#0b1f3a;--navy2:#16365f;--ok:#12a36b;--warn:#c77700;--bad:#d64545;
+  --brand:#ff6a1a;--brand2:#ff9a3d;--navy:#0b1f3a;--navy2:#16365f;--ok:#12a36b;--warn:#c77700;
   --shadow:0 1px 2px rgba(11,31,58,.06),0 8px 24px rgba(11,31,58,.08);
 }
 @media (prefers-color-scheme:dark){
@@ -24,40 +24,32 @@ body{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvet
 header{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;padding:calc(18px + env(safe-area-inset-top)) 20px 70px}
 .wrap{max-width:880px;margin:0 auto}
 .brand{display:flex;align-items:center;gap:12px}
-.logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--brand),var(--brand2));display:grid;place-items:center;box-shadow:0 6px 16px rgba(255,106,26,.4);flex:0 0 auto}
+.logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--brand),var(--brand2));display:grid;place-items:center;box-shadow:0 6px 16px rgba(255,106,26,.4)}
 .brand h1{font-size:20px;letter-spacing:.2px}
 .brand p{font-size:12.5px;opacity:.75}
 .hi{font-size:13px;font-weight:700;color:var(--brand2);opacity:1!important;margin-top:2px}
 .tiny{font-size:7px;opacity:.45;text-align:center;letter-spacing:.12em;padding:0 0 6px}
 main{margin-top:-52px;padding:0 16px 40px}
 .card{background:var(--card);border-radius:18px;box-shadow:var(--shadow);padding:20px;margin-bottom:16px}
-.ttl{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
 .label{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
-.big{display:flex;align-items:center;gap:10px;margin-top:8px}
+.big{display:flex;align-items:center;gap:10px;margin-top:10px}
 .big input{flex:1;min-width:0;font-size:44px;font-weight:700;border:2px solid var(--line);border-radius:14px;padding:10px 16px;background:transparent;color:var(--ink);text-align:center;outline:none;transition:.15s}
 .big input:focus{border-color:var(--brand);box-shadow:0 0 0 4px rgba(255,106,26,.15)}
 .unit{font-size:22px;font-weight:700;color:var(--brand)}
 .step{width:52px;height:52px;border-radius:14px;border:1px solid var(--line);background:transparent;color:var(--ink);font-size:26px;cursor:pointer}
 .step:active{transform:scale(.95)}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.f{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
-.f label{font-size:12.5px;color:var(--muted);font-weight:600;display:block;margin-bottom:5px}
-.f input,.f select,.city input{width:100%;min-width:0;border:1px solid var(--line);border-radius:12px;padding:11px 12px;font-size:16px;background:transparent;color:var(--ink);outline:none;font-family:inherit}
-.f select option{color:#111}
-.f input:focus,.f select:focus,.city input:focus{border-color:var(--brand);box-shadow:0 0 0 4px rgba(255,106,26,.15)}
-.f input[readonly]{background:rgba(127,127,127,.08)}
-.hint{font-size:12px;color:var(--muted);margin-top:8px}
-.temp-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.temp-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:10px}
 .temp-box{display:flex;align-items:baseline;gap:4px;border:1px solid var(--line);border-radius:12px;padding:6px 12px}
 .temp-box input{width:74px;font-size:28px;font-weight:700;border:0;background:transparent;color:var(--ink);outline:none;text-align:right}
 .temp-box span{font-weight:600;color:var(--muted)}
 .badge{font-size:12px;border-radius:99px;padding:4px 10px;font-weight:600;background:rgba(18,163,107,.12);color:var(--ok)}
 .badge.warn{background:rgba(199,119,0,.14);color:var(--warn)}
-.badge.bad{background:rgba(214,69,69,.14);color:var(--bad)}
-.btn{border:1px solid var(--line);background:transparent;color:var(--ink);padding:10px 14px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
+.btn{border:1px solid var(--line);background:transparent;color:var(--ink);padding:10px 14px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer}
 .btn:hover{border-color:var(--brand)}
 .btn.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border:0;box-shadow:0 6px 16px rgba(255,106,26,.3)}
 .city{display:flex;gap:8px;margin-top:12px}
+.city input,.adv input[type=number]{flex:1;min-width:0;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:15px;background:transparent;color:var(--ink);outline:none}
 .hero{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;border-radius:18px;padding:22px;box-shadow:var(--shadow);margin-bottom:16px;display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
 .hero .v{font-size:56px;font-weight:800;line-height:1}
 .hero .v small{font-size:22px;font-weight:600;opacity:.8;margin-left:6px}
@@ -65,12 +57,16 @@ main{margin-top:-52px;padding:0 16px 40px}
 .hero .side{text-align:right;font-size:13px;opacity:.9}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
 .m{border:1px solid var(--line);border-radius:14px;padding:14px;background:var(--card)}
-.m.bad{border-color:var(--bad);background:rgba(214,69,69,.06)}
 .m .k{font-size:12px;color:var(--muted);font-weight:600}
 .m .n{font-size:24px;font-weight:700;margin-top:4px}
 .m .n small{font-size:13px;color:var(--muted);font-weight:600;margin-left:3px}
 .m .h{font-size:11.5px;color:var(--muted);margin-top:2px}
-.m.bad .h{color:var(--bad);font-weight:600}
+details summary{cursor:pointer;font-weight:700;list-style:none;display:flex;justify-content:space-between}
+details summary::after{content:"＋";color:var(--brand)}
+details[open] summary::after{content:"－"}
+.adv{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:16px}
+.adv label{font-size:13px;color:var(--muted);font-weight:600;display:block;margin-bottom:6px}
+.adv input[type=range]{width:100%;accent-color:var(--brand)}
 table{width:100%;border-collapse:collapse;font-size:14px;margin-top:10px}
 th,td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
 th:first-child,td:first-child{text-align:left}
@@ -78,16 +74,18 @@ th{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.
 .tbl{overflow-x:auto}
 .empty{color:var(--muted);font-size:14px;padding:10px 0}
 .foot{font-size:12px;color:var(--muted);text-align:center;padding:6px 10px}
-.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(80px);background:var(--navy);color:#fff;padding:10px 18px;border-radius:99px;font-size:14px;transition:.25s;opacity:0;max-width:92vw;text-align:center}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(80px);background:var(--navy);color:#fff;padding:10px 18px;border-radius:99px;font-size:14px;transition:.25s;opacity:0}
 .toast.show{transform:translateX(-50%);opacity:1}
 @media(max-width:480px){.hero .v{font-size:46px}.big input{font-size:36px}.hero .side{text-align:left}}
+.das{margin-top:14px}
+.das input{width:100%;margin-top:6px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:16px;background:transparent;color:var(--ink);outline:none}
+.das input:focus{border-color:var(--brand);box-shadow:0 0 0 4px rgba(255,106,26,.15)}
 #report{display:none}
 #report h1{font-size:22px;margin-bottom:2px}
 #report h1 .das-t{color:#ff6a1a;font-weight:700}
 #report .sub{color:#555;font-size:12px;margin-bottom:16px}
 #report h2{font-size:14px;text-transform:uppercase;letter-spacing:.06em;margin:18px 0 6px;border-bottom:2px solid #ff6a1a;padding-bottom:4px}
 #report table td,#report table th{border-bottom:1px solid #ddd;color:#000}
-#report .sign{margin-top:40px;font-size:13px;color:#000}
 @page{margin:16mm}
 @media print{html,body{background:#fff!important;color:#000!important}header,main,.toast{display:none!important}#report{display:block}}
 </style>
@@ -96,104 +94,68 @@ th{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.
 <header>
   <div class="wrap brand">
     <div class="logo"><svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><path d="M12 2c.6 3.2 4 5.2 4 9.4A4 4 0 0 1 12 15.5a4 4 0 0 1-4-4.1c0-1.6.8-2.8 1.8-3.9C10.2 8.6 11 9.3 11.4 10 11.9 7.6 11.6 4.6 12 2zM12 22a6 6 0 0 1-6-6c0-1.2.4-2.3 1-3.2.7 1.6 2.2 2.7 4 3.1 1.6.4 3.2.1 4.4-.9.4.9.6 1.9.6 3A6 6 0 0 1 12 22z"/></svg></div>
-    <div><h1>GPL Calc</h1><p>Calcolo consegne GPL con DAS</p><p class="hi">Ciao Vega 👋</p></div>
+    <div><h1>GPL Calc</h1><p>Calcolatore professionale di carico GPL</p><p class="hi">Ciao Vega 👋</p></div>
   </div>
 </header>
 
 <main class="wrap">
-  <!-- 1. Consegna -->
   <section class="card">
-    <div class="ttl">Consegna</div>
-    <div class="f">
-      <div><label for="das">N° DAS</label><input id="das" placeholder="Es. 26IT0000000000" autocomplete="off" autocapitalize="characters" maxlength="40"></div>
-      <div><label for="cli">Cliente</label><input id="cli" autocomplete="off" maxlength="80"></div>
-      <div><label for="addr">Indirizzo di consegna</label><input id="addr" autocomplete="off" maxlength="120"></div>
-      <div><label for="plate">Targa autobotte</label><input id="plate" autocomplete="off" autocapitalize="characters" maxlength="20"></div>
-      <div><label for="drv">Autista</label><input id="drv" autocomplete="off" maxlength="60"></div>
-    </div>
-  </section>
-
-  <!-- 2. Misure -->
-  <section class="card">
-    <div class="ttl">Misure</div>
-    <div class="f">
-      <div><label for="mIni">Contatore iniziale (L)</label><input id="mIni" type="number" step="0.1" min="0" inputmode="decimal"></div>
-      <div><label for="mFin">Contatore finale (L)</label><input id="mFin" type="number" step="0.1" min="0" inputmode="decimal"></div>
-    </div>
-    <div class="label" style="margin-top:16px">Litri erogati</div>
+    <div class="label">Litri caricati</div>
     <div class="big">
-      <button class="step" id="minus" aria-label="−">−</button>
-      <input id="liters" inputmode="decimal" placeholder="0" autocomplete="off" aria-label="Litri erogati">
+      <button class="step" id="minus" aria-label="Diminuisci">−</button>
+      <input id="liters" inputmode="decimal" placeholder="0" autocomplete="off" aria-label="Litri caricati">
       <span class="unit">L</span>
-      <button class="step" id="plus" aria-label="+">+</button>
+      <button class="step" id="plus" aria-label="Aumenta">+</button>
     </div>
-    <div class="hint" id="meterHint">Inserisci le letture del contatore oppure i litri direttamente.</div>
-    <div class="f" style="margin-top:14px">
-      <div><label for="rho15">Densità a 15 °C (kg/L) · dal DAS</label><input id="rho15" type="number" step="0.0001" min="0.45" max="0.65" value="0.5040" inputmode="decimal"></div>
+    <div class="das">
+      <label class="label" for="das">N° DAS (facoltativo)</label>
+      <input id="das" placeholder="Es. 26IT0000000000" autocomplete="off" autocapitalize="characters" maxlength="40">
+    </div>
+    <div class="das">
+      <label class="label" for="rho15">Densità a 15 °C (kg/L) · dal DAS</label>
+      <input id="rho15" type="number" step="0.0001" min="0.45" max="0.65" value="0.5040" inputmode="decimal">
     </div>
   </section>
 
-  <!-- 3. Temperatura -->
   <section class="card">
-    <div class="ttl">Temperatura del prodotto</div>
+    <div class="label">Temperatura ambiente</div>
     <div class="temp-row">
-      <div class="temp-box"><input id="temp" type="number" step="0.1" aria-label="°C"><span>°C</span></div>
-      <span class="badge warn" id="tsrc">…</span>
+      <div class="temp-box"><input id="temp" type="number" step="0.1" aria-label="Temperatura"><span>°C</span></div>
+      <span class="badge warn" id="tsrc">Caricamento…</span>
       <button class="btn" id="geo">Usa la mia posizione</button>
     </div>
     <form class="city" id="cityForm">
-      <input id="city" placeholder="Oppure cerca la città (es. Roma)" aria-label="Oppure cerca la città (es. Roma)">
+      <input id="city" placeholder="Oppure cerca la tua città (es. Roma)" aria-label="Città">
       <button class="btn" type="submit">Cerca</button>
     </form>
-    <div class="hint">Se il contatore indica la temperatura del prodotto, inseriscila a mano: è più precisa di quella ambiente.</div>
   </section>
 
-  <!-- 4. Serbatoio cliente -->
-  <section class="card">
-    <div class="ttl">Serbatoio del cliente</div>
-    <div class="f">
-      <div><label for="cap">Capacità serbatoio (L)</label><input id="cap" type="number" step="1" min="0" inputmode="decimal" placeholder="Es. 1000, 1750, 3000"></div>
-      <div><label for="pIni">Livello prima (%)</label><input id="pIni" type="number" step="1" min="0" max="100" inputmode="decimal"></div>
-      <div><label for="fill">Limite di riempimento (%)</label><input id="fill" type="number" step="1" min="50" max="100" value="80" inputmode="decimal"></div>
-    </div>
-  </section>
-
-  <!-- 5. Accisa -->
-  <section class="card">
-    <div class="ttl">Accisa</div>
-    <div class="f">
-      <div><label for="use">Uso del GPL</label>
-        <select id="use"><option value="heat">Combustione / riscaldamento</option><option value="fuel">Autotrazione (carburante)</option><option value="custom">Altra aliquota</option></select></div>
-      <div><label for="rate">Aliquota (€ per 1000 kg)</label><input id="rate" type="number" step="0.00001" min="0" inputmode="decimal"></div>
-    </div>
-    <div class="hint">Aliquote nazionali ADM: riscaldamento 189,94458 €, autotrazione 267,77 € per 1000 kg. Verifica eventuali riduzioni (zone montane, usi agevolati) e aggiornamenti.</div>
-  </section>
-
-  <!-- Risultato -->
   <section class="hero">
     <div>
-      <div class="t">Massa di GPL consegnata</div>
+      <div class="t">Massa di GPL caricata</div>
       <div class="v"><span id="kg">—</span><small>kg</small></div>
     </div>
-    <div class="side" id="heroSide">Inserisci i litri o le letture del contatore</div>
+    <div class="side" id="heroSide">Inserisci i litri per iniziare</div>
   </section>
 
   <section class="card">
     <div class="grid" id="grid"></div>
     <div class="row" style="margin-top:16px">
-      <button class="btn primary" id="save">Salva consegna</button>
-      <button class="btn" id="pdf">PDF consegna</button>
+      <button class="btn primary" id="save">Salva nello storico</button>
       <button class="btn" id="copy">Copia riepilogo</button>
+      <button class="btn" id="pdf">Esporta PDF</button>
     </div>
   </section>
 
   <section class="card">
-    <div class="ttl"><span>Storico consegne</span>
-      <span class="row"><button class="btn" id="csv">Esporta CSV</button><button class="btn" id="pdf2">PDF storico</button><button class="btn" id="clear">Cancella</button></span></div>
+    <div class="row" style="justify-content:space-between">
+      <div class="label">Storico</div>
+      <div class="row"><button class="btn" id="csv">Esporta CSV</button><button class="btn" id="pdf2">Esporta PDF</button><button class="btn" id="clear">Cancella</button></div>
+    </div>
     <div class="tbl" id="hist"></div>
   </section>
 
-  <p class="foot">Calcolo dalla densità a 15 °C del DAS corretta per la temperatura. A scopo informativo; fanno fede il contatore e il DAS.<br>Di <a href="https://github.com/PronFutRay" style="color:inherit">PronFutRay</a></p>
+  <p class="foot">Calcolo dalla densità a 15 °C indicata nel DAS (predefinita 0,5040 kg/L) corretta per la temperatura. A scopo informativo; non sostituisce il contatore dell'erogatore.<br>Di <a href="https://github.com/PronFutRay" style="color:inherit">PronFutRay</a></p>
   <div class="tiny">Raul</div>
 </main>
 <div id="report"></div>
@@ -202,131 +164,143 @@ th{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.
 <script>
 (function(){
 "use strict";
-var TX={"start_hint": "Inserisci i litri o le letture del contatore", "results_here": "I risultati appariranno qui.", "l15": "Litri a 15 °C", "vs_real": "rispetto al volume misurato", "dens_at": "Densità a {t} °C", "ref15": "A 15 °C", "tank_after": "Livello dopo la consegna", "over_limit": "⚠ Supera il limite del {l} %", "within_limit": "Entro il limite del {l} %", "room": "Spazio fino al limite", "room_h": "Dal {p} % al {l} %", "excise": "Accisa", "pressure": "Pressione indicativa", "pressure_h": "Manometrica a questa temperatura", "meter_hint": "Inserisci le letture del contatore oppure i litri direttamente.", "meter_auto": "Litri calcolati dal contatore (finale − iniziale).", "meter_bad": "La lettura finale deve essere maggiore di quella iniziale.", "t_auto": "Ambiente", "t_pos": "la tua posizione", "t_cache": "Ultimo valore salvato", "t_default": "Riferimento 15 °C · offline", "t_manual": "Manuale", "t_reading": "Rilevo la temperatura…", "t_locating": "Rilevo la posizione…", "t_nopos": "Impossibile usare la posizione. Cerca la città o inserisci la temperatura.", "city_nf": "Città non trovata", "city_net": "Nessuna connessione per cercare la città", "h_date": "Data", "h_client": "Cliente", "h_liters": "Litri", "h_l15": "L 15 °C", "h_excise": "Accisa €", "h_count": "Consegne", "no_hist": "Nessuna consegna salvata.", "export_err": "Impossibile esportare il file", "need_liters": "Inserisci prima i litri", "no_data": "Nessun dato", "generated": "Generato il {d} alle {h}", "doc_title": "Documento di consegna GPL", "sec_delivery": "Consegna", "client": "Cliente", "address": "Indirizzo", "plate": "Targa autobotte", "driver": "Autista", "sec_measure": "Misure", "meter_start": "Contatore iniziale", "meter_end": "Contatore finale", "liters_label": "Litri erogati", "sec_temp": "Temperatura", "rho15": "Densità a 15 °C (DAS)", "hero_t": "Massa di GPL", "sec_tank": "Serbatoio del cliente", "tank_cap": "Capacità", "tank_before": "Livello prima", "tank_limit": "Limite di riempimento", "sec_excise": "Accisa", "use": "Uso", "rate": "Aliquota", "sign_drv": "Firma autista", "sign_cli": "Firma cliente", "doc_note": "Calcolo dalla densità a 15 °C del DAS corretta per la temperatura. Fanno fede il contatore e il DAS.", "file_one": "consegna-gpl", "hist_title": "GPL Calc · Storico consegne", "totals": "Totali", "file_hist": "storico-consegne-gpl", "saved": "Consegna salvata · pronta la prossima", "copied": "Riepilogo copiato", "csv_head": "Data;DAS;Cliente;Indirizzo;Targa;Autista;Contatore_iniziale;Contatore_finale;Litri;Temp_C;Densita_15C;Litri_15C;Kg;Accisa_EUR;Livello_prima_%;Livello_dopo_%", "file_csv": "storico-consegne-gpl", "confirm_clear": "Cancellare tutto lo storico?"};
-var LOCALE="it-IT";
 var $=function(i){return document.getElementById(i)};
 var KEY="gplcalc.v1";
-var RATES={heat:189.94458,fuel:267.77};   /* €/1000 kg – Agenzia Dogane e Monopoli (verificare aggiornamenti) */
-var S={rho15:"0.5040",fill:80,use:"heat",rate:"",plate:"",drv:"",mIni:"",city:null,lastTemp:null,hist:[]};
+var S={p:50,rho15:"0.5040",price:"",cons:"",fill:80,city:null,lastTemp:null,hist:[]};
 try{var raw=JSON.parse(localStorage.getItem(KEY)||"null");if(raw)for(var k in raw)S[k]=raw[k];}catch(e){}
 function persist(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+var T={val:15,src:"default",label:""};
 var last=null;
 
-function num(id){var v=parseFloat(String($(id).value).replace(",","."));return isFinite(v)?v:NaN}
-function fmt(n,d){if(d==null)d=1;return isFinite(n)?n.toLocaleString(LOCALE,{minimumFractionDigits:d,maximumFractionDigits:d}):"—"}
-function fill2(s,o){return s.replace(/\{(\w+)\}/g,function(_,k){return o[k]!=null?o[k]:""})}
-function toast(m,ms){var t=$("toast");t.textContent=m;t.classList.add("show");clearTimeout(toast.tm);toast.tm=setTimeout(function(){t.classList.remove("show")},ms||2200)}
-function esc(x){return String(x==null?"":x).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function fmt(n,d){if(d==null)d=1;return isFinite(n)?n.toLocaleString("it-IT",{minimumFractionDigits:d,maximumFractionDigits:d}):"—"}
+function toast(m){var t=$("toast");t.textContent=m;t.classList.add("show");setTimeout(function(){t.classList.remove("show")},1800)}
 
 /* ---------- Física ---------- */
-var RHO_P=0.507,RHO_B=0.579,BETA_P=0.0030,BETA_B=0.0020,M_P=44.1,M_B=58.12;
-function psat(a,b,c,t){return Math.pow(10,a-b/(c+t))*0.00133322}
-function compute(L,temp,rho15){
-  /* densità di riferimento a 15 °C (dal DAS); la miscela propano/butano si stima da essa */
-  var p=Math.min(1,Math.max(0,(RHO_B-rho15)/(RHO_B-RHO_P))),b=1-p;
+var RHO_P=0.507,RHO_B=0.579,BETA_P=0.0030,BETA_B=0.0020,KWH_P=12.88,KWH_B=12.69,M_P=44.1,M_B=58.12;
+function psat(a,b,c,t){return Math.pow(10,a-b/(c+t))*0.00133322} // bar abs
+function compute(L,temp,rho15,fillPct,price,cons){
+  /* densidad de referencia a 15 °C (del DAS); la mezcla propano/butano se estima a partir de ella */
+  var p=Math.min(1,Math.max(0,(RHO_B-rho15)/(RHO_B-RHO_P))),b=1-p,pPct=Math.round(p*100);
   var beta=p*BETA_P+b*BETA_B;
   var rho=rho15*(1-beta*(temp-15));
-  var kg=L*rho,v15=kg/rho15;
+  var kg=L*rho;
+  var v15=kg/rho15;
+  var kwh=kg*(p*KWH_P+b*KWH_B);
+  var co2=kg*(p*2.99+b*3.03);
   var nP=p/M_P,nB=b/M_B,xP=nP/(nP+nB),xB=1-xP;
   var pAbs=xP*psat(6.82973,813.2,248,temp)+xB*psat(6.82485,943.453,239.711,temp);
-  return {rho:rho,rho15:rho15,kg:kg,v15:v15,dv:L-v15,pg:Math.max(pAbs-1.013,0)};
+  var r={rho:rho,rho15:rho15,kg:kg,v15:v15,dv:L-v15,kwh:kwh,co2:co2,pg:Math.max(pAbs-1.013,0),
+    tank:L/(fillPct/100),bot15:kg/15,pP:pPct};
+  if(price>0){r.cost=L*price;r.costKg=r.cost/kg}
+  if(cons>0){r.km=L/cons*100;if(price>0)r.cost100=cons*price}
+  return r;
 }
 
 /* ---------- Render ---------- */
 var cur=[];
-function card(k,n,u,h,bad){cur.push([k,n+" "+u]);return '<div class="m'+(bad?' bad':'')+'"><div class="k">'+k+'</div><div class="n">'+n+'<small>'+u+'</small></div>'+(h?'<div class="h">'+h+'</div>':'')+'</div>'}
-function readL(){var v=num("liters");return v>0?v:0}
-function rateNow(){var u=$("use").value;if(u!=="custom"){return RATES[u]}var r=num("rate");return r>=0?r:0}
+function card(k,n,u,h){cur.push([k,n+" "+u]);return '<div class="m"><div class="k">'+k+'</div><div class="n">'+n+'<small>'+u+'</small></div>'+(h?'<div class="h">'+h+'</div>':'')+'</div>'}
+function readL(){var v=parseFloat(String($("liters").value).replace(",","."));return v>0?v:0}
 function render(){
   var L=readL();
-  var rr=num("rho15");if(!(rr>0.45&&rr<0.65))rr=0.504;
-  var temp=num("temp");if(!isFinite(temp))temp=15;
-  if(!L){last=null;$("kg").textContent="—";$("heroSide").textContent=TX.start_hint;$("grid").innerHTML='<div class="empty">'+TX.results_here+'</div>';return}
-  var r=compute(L,temp,rr);
-  var rate=rateNow();r.rate=rate;r.acc=r.kg*rate/1000;
-  var cap=num("cap"),pIni=num("pIni"),lim=num("fill");if(!(lim>0))lim=80;
-  if(cap>0&&pIni>=0){r.cap=cap;r.pIni=pIni;r.lim=lim;r.pFin=pIni+L/cap*100;r.room=cap*(lim-pIni)/100;r.over=r.pFin>lim+0.05}
-  last={L:L,T:temp,r:r};
+  var price=0,cons=0,fill=80;
+  var rr=parseFloat(String($("rho15").value).replace(",","."));if(!(rr>0.45&&rr<0.65))rr=0.504;
+  var temp=parseFloat($("temp").value);if(!isFinite(temp))temp=15;
+  if(!L){last=null;$("kg").textContent="—";$("heroSide").textContent="Inserisci i litri per iniziare";$("grid").innerHTML='<div class="empty">I risultati appariranno qui.</div>';return}
+  var r=compute(L,temp,rr,fill,price,cons);last={L:L,T:temp,r:r};
   $("kg").textContent=fmt(r.kg,2);
-  $("heroSide").innerHTML=fmt(L,1)+" L · "+fmt(temp,1)+" °C<br>"+TX.l15+": <b>"+fmt(r.v15,1)+" L</b>";
+  $("heroSide").innerHTML=fmt(L,1)+' L a '+fmt(temp,1)+' °C<br>Densità '+fmt(r.rho,4)+' kg/L';
   cur=[];var h="";
-  h+=card(TX.l15,fmt(r.v15,1),"L",(r.dv>=0?"+":"")+fmt(r.dv,1)+" L "+TX.vs_real);
-  h+=card(fill2(TX.dens_at,{t:fmt(temp,1)}),fmt(r.rho,4),"kg/L",TX.ref15+": "+fmt(r.rho15,4));
-  if(r.cap!=null){
-    h+=card(TX.tank_after,fmt(r.pFin,1),"%",r.over?fill2(TX.over_limit,{l:fmt(lim,0)}):fill2(TX.within_limit,{l:fmt(lim,0)}),r.over);
-    h+=card(TX.room,fmt(Math.max(0,r.room),0),"L",fill2(TX.room_h,{p:fmt(pIni,0),l:fmt(lim,0)}),r.room<L);
-  }
-  h+=card(TX.excise,fmt(r.acc,2),"€",fmt(rate,2)+" €/1000 kg · "+$("use").options[$("use").selectedIndex].text);
-  h+=card(TX.pressure,fmt(r.pg,1),"bar",TX.pressure_h);
+  h+=card("Densità a "+fmt(temp,1)+" °C",fmt(r.rho,4),"kg/L","Riferimento a 15 °C: "+fmt(r.rho15,4));
+  h+=card("Volume a 15 °C",fmt(r.v15,1),"L",(r.dv>=0?"+":"")+fmt(r.dv,1)+" L rispetto al volume reale");
+  h+=card("Energia",fmt(r.kwh,1),"kWh","≈ "+fmt(r.kwh*3.6,0)+" MJ (PCI)");
+  h+=card("Pressione del serbatoio",fmt(r.pg,1),"bar","Manometrica indicativa a quella temperatura");
+  h+=card("Emissioni di CO₂",fmt(r.co2,1),"kg","Combustione completa");
+  h+=card("Serbatoio minimo",fmt(r.tank,0),"L","Con riempimento al "+fmt(fill,0)+" %");
+  h+=card("Bombole equivalenti",fmt(r.bot15,2),"× 15 kg","");
+  if(r.cost!=null)h+=card("Costo del carico",fmt(r.cost,2),"€",fmt(r.costKg,3)+" €/kg");
+  if(r.km!=null)h+=card("Autonomia stimata",fmt(r.km,0),"km",r.cost100!=null?fmt(r.cost100,2)+" €/100 km":"");
   $("grid").innerHTML=h;
-}
-function meter(){
-  var a=num("mIni"),b=num("mFin");
-  if(isFinite(a)&&isFinite(b)&&b>a){$("liters").value=Math.round((b-a)*10)/10;$("liters").readOnly=true;$("meterHint").textContent=TX.meter_auto}
-  else{$("liters").readOnly=false;$("meterHint").textContent=(isFinite(a)&&isFinite(b)&&b<=a)?TX.meter_bad:TX.meter_hint}
-  S.mIni=$("mIni").value;persist();render();
 }
 
 /* ---------- Temperatura ---------- */
 function setTemp(v,src,label){
+  T={val:v,src:src,label:label||""};
   $("temp").value=(Math.round(v*10)/10);
   var b=$("tsrc");
-  if(src==="auto"){b.className="badge";b.textContent=TX.t_auto+" · "+(label||TX.t_pos)}
-  else if(src==="cache"){b.className="badge warn";b.textContent=TX.t_cache}
-  else{b.className="badge warn";b.textContent=TX.t_default}
+  if(src==="auto"){b.className="badge";b.textContent="Automatica · "+(label||"posizione")}
+  else if(src==="manual"){b.className="badge";b.textContent="Manuale"}
+  else if(src==="cache"){b.className="badge warn";b.textContent="Ultimo valore salvato"}
+  else{b.className="badge warn";b.textContent="Riferimento 15 °C · offline"}
   if(src==="auto"){S.lastTemp={v:v,label:label};persist()}
   render();
 }
 function fetchTemp(lat,lon,label){
-  $("tsrc").className="badge warn";$("tsrc").textContent=TX.t_reading;
+  $("tsrc").className="badge warn";$("tsrc").textContent="Rilevo la temperatura…";
   return fetch("https://api.open-meteo.com/v1/forecast?latitude="+lat+"&longitude="+lon+"&current=temperature_2m")
     .then(function(r){if(!r.ok)throw 0;return r.json()})
     .then(function(j){var t=j.current&&j.current.temperature_2m;if(typeof t!=="number")throw 0;setTemp(t,"auto",label)})
     .catch(function(){fallback()});
 }
-function fallback(){if(S.lastTemp)setTemp(S.lastTemp.v,"cache");else setTemp(15,"default")}
+function fallback(){
+  if(S.lastTemp)setTemp(S.lastTemp.v,"cache");else setTemp(15,"default");
+}
 function geolocate(){
   if(!navigator.geolocation){fallback();return}
-  $("tsrc").className="badge warn";$("tsrc").textContent=TX.t_locating;
+  $("tsrc").className="badge warn";$("tsrc").textContent="Rilevo la posizione…";
   navigator.geolocation.getCurrentPosition(function(pos){
     S.city=null;persist();
-    fetchTemp(pos.coords.latitude.toFixed(3),pos.coords.longitude.toFixed(3),TX.t_pos);
-  },function(){fallback();toast(TX.t_nopos,3500)},{timeout:8000,maximumAge:600000});
+    fetchTemp(pos.coords.latitude.toFixed(3),pos.coords.longitude.toFixed(3),"la tua posizione");
+  },function(){fallback();toast("Impossibile usare la posizione. Cerca la tua città o inserisci la temperatura.")},{timeout:8000,maximumAge:600000});
 }
 function searchCity(q){
   fetch("https://geocoding-api.open-meteo.com/v1/search?name="+encodeURIComponent(q)+"&count=1&language=it")
    .then(function(r){return r.json()})
    .then(function(j){
-     if(!j.results||!j.results.length){toast(TX.city_nf);return}
+     if(!j.results||!j.results.length){toast("Città non trovata");return}
      var c=j.results[0];S.city={lat:c.latitude,lon:c.longitude,name:c.name};persist();
      fetchTemp(c.latitude,c.longitude,c.name);
-   }).catch(function(){toast(TX.city_net)});
+   }).catch(function(){toast("Nessuna connessione per cercare la città")});
 }
 
-/* ---------- Storico ---------- */
-function entry(){
-  var r=last.r;
-  return {t:new Date().toISOString(),das:$("das").value.trim(),cli:$("cli").value.trim(),addr:$("addr").value.trim(),plate:$("plate").value.trim(),drv:$("drv").value.trim(),
-    mIni:$("mIni").value,mFin:$("mFin").value,L:last.L,T:last.T,rho15:r.rho15,v15:r.v15,kg:r.kg,acc:r.acc,rate:r.rate,use:$("use").value,
-    cap:r.cap!=null?r.cap:null,pIni:r.pIni!=null?r.pIni:null,pFin:r.pFin!=null?r.pFin:null};
-}
-function dt(t){var d=new Date(t);return d.toLocaleDateString(LOCALE,{day:"2-digit",month:"2-digit",year:"2-digit"})+" "+d.toLocaleTimeString(LOCALE,{hour:"2-digit",minute:"2-digit"})}
-function histRows(full){
-  var h="<table><thead><tr><th>"+TX.h_date+"</th><th>DAS</th><th>"+TX.h_client+"</th><th>"+TX.h_liters+"</th><th>°C</th><th>"+TX.h_l15+"</th><th>kg</th><th>"+TX.h_excise+"</th></tr></thead><tbody>";
+/* ---------- Historial ---------- */
+function renderHist(){
+  var el=$("hist");
+  if(!S.hist.length){el.innerHTML='<div class="empty">Nessun carico salvato.</div>';return}
+  var h="<table><thead><tr><th>Data</th><th>DAS</th><th>Litri</th><th>°C</th><th>kg</th><th>kWh</th><th>€</th></tr></thead><tbody>";
   S.hist.slice().reverse().forEach(function(e){
-    h+="<tr><td>"+dt(e.t)+"</td><td>"+esc(e.das||"—")+"</td><td>"+esc(e.cli||"—")+"</td><td>"+fmt(e.L,1)+"</td><td>"+fmt(e.T,1)+"</td><td>"+(e.v15!=null?fmt(e.v15,1):"—")+"</td><td>"+fmt(e.kg,2)+"</td><td>"+(e.acc!=null?fmt(e.acc,2):"—")+"</td></tr>";
+    var d=new Date(e.t);
+    h+="<tr><td>"+d.toLocaleDateString("it-IT",{day:"2-digit",month:"short"})+" "+d.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})+"</td><td>"+esc(e.das||"—")+"</td><td>"+fmt(e.L,1)+"</td><td>"+fmt(e.T,1)+"</td><td>"+fmt(e.kg,2)+"</td><td>"+fmt(e.kwh,1)+"</td><td>"+(e.cost!=null?fmt(e.cost,2):"—")+"</td></tr>";
   });
-  return h+"</tbody></table>";
+  el.innerHTML=h+"</tbody></table>";
 }
-function renderHist(){$("hist").innerHTML=S.hist.length?histRows():'<div class="empty">'+TX.no_hist+'</div>'}
 
+/* ---------- Eventos ---------- */
+$("liters").addEventListener("input",render);
+$("rho15").addEventListener("input",function(){S.rho15=$("rho15").value;persist();render()});
+$("temp").addEventListener("input",function(){var v=parseFloat($("temp").value);if(isFinite(v)){T={val:v,src:"manual"};$("tsrc").className="badge";$("tsrc").textContent="Manuale";render()}});
+$("minus").onclick=function(){var v=Math.max(0,readL()-1);$("liters").value=v||"";render()};
+$("plus").onclick=function(){$("liters").value=readL()+1;render()};
+$("geo").onclick=geolocate;
+$("cityForm").addEventListener("submit",function(e){e.preventDefault();var q=$("city").value.trim();if(q)searchCity(q)});
+$("save").onclick=function(){
+  if(!last){toast("Inserisci prima i litri");return}
+  S.hist.push({t:new Date().toISOString(),das:$("das").value.trim(),L:last.L,T:last.T,kg:last.r.kg,kwh:last.r.kwh,cost:last.r.cost!=null?last.r.cost:null});
+  if(S.hist.length>200)S.hist.shift();
+  persist();renderHist();toast("Carico salvato");
+};
+$("copy").onclick=function(){
+  if(!last){toast("Inserisci prima i litri");return}
+  var r=last.r,t=($("das").value.trim()?"DAS n° "+$("das").value.trim()+"\n":"")+"Carico GPL: "+fmt(last.L,1)+" L a "+fmt(last.T,1)+" °C\nMassa: "+fmt(r.kg,2)+" kg\nDensità: "+fmt(r.rho,4)+" kg/L\nVolume a 15 °C: "+fmt(r.v15,1)+" L\nEnergia: "+fmt(r.kwh,1)+" kWh\nCO2: "+fmt(r.co2,1)+" kg"+(r.cost!=null?"\nCosto: "+fmt(r.cost,2)+" €":"");
+  (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){toast("Riepilogo copiato")},function(){
+    var a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();try{document.execCommand("copy");toast("Riepilogo copiato")}catch(e){}a.remove()});
+};
 /* ---------- APK (Android): guardar/compartir archivos ---------- */
 var NATIVE=!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
-function nativeShare(name,b64){
+function nativeShare(name,b64,mime){
   var P=window.Capacitor.Plugins;
   return P.Filesystem.writeFile({path:name,data:b64,directory:"CACHE"}).then(function(w){
     return P.Share.share({title:name,url:w.uri,dialogTitle:name});
-  }).catch(function(e){if(!/cancel/i.test(String(e&&e.message)))toast(TX.export_err)});
+  }).catch(function(e){if(!/cancel/i.test(String(e&&e.message)))toast("Impossibile esportare il file")});
 }
 function loadJsPDF(){return window.jspdf?Promise.resolve():new Promise(function(ok,ko){var s=document.createElement("script");s.src="jspdf.umd.min.js";s.onload=ok;s.onerror=ko;document.head.appendChild(s)})}
 function reportToPDF(name){   /* dibuja el informe (#report) como PDF de texto */
@@ -339,111 +313,69 @@ function reportToPDF(name){   /* dibuja el informe (#report) como PDF de texto *
       if(tag==="H1"){doc.setFont("helvetica","bold");doc.setFontSize(15);doc.setTextColor(0);var L=doc.splitTextToSize(txt(el),W);room(L.length*7);doc.text(L,X,y);y+=L.length*7}
       else if(tag==="H2"){y+=4;room(8);doc.setFont("helvetica","bold");doc.setFontSize(12);doc.setTextColor(0);doc.text(txt(el),X,y);y+=6}
       else if(tag==="TABLE"){
-        el.querySelectorAll("tr").forEach(function(tr){
-          var cells=tr.querySelectorAll("td,th"),n=cells.length,cw=n===2?[100,80]:[27,27,36,18,12,20,20,20];
+        var rows=el.querySelectorAll("tr");
+        rows.forEach(function(tr){
+          var cells=tr.querySelectorAll("td,th"),n=cells.length,cw=n===2?[110,70]:[38,40,20,16,22,22,22];
           var head=tr.querySelector("th")||tr.querySelector("b");
-          doc.setFont("helvetica",head?"bold":"normal");doc.setFontSize(n===2?10:8);doc.setTextColor(0);
+          doc.setFont("helvetica",head?"bold":"normal");doc.setFontSize(n===2?10:8.5);doc.setTextColor(0);
           var lines=[],h=0,x=X;
           cells.forEach(function(c,i){var t=doc.splitTextToSize(txt(c),(cw[i]||20)-2);lines.push(t);h=Math.max(h,t.length)});
           room(h*4.6+2);
           lines.forEach(function(t,i){doc.text(t,x,y);x+=cw[i]||20});
           y+=h*4.6+1.5;doc.setDrawColor(225);doc.line(X,y-3,X+W,y-3);
         });
-      } else if(el.className==="sign"){y+=14;room(12);doc.setFont("helvetica","normal");doc.setFontSize(10);doc.setTextColor(0);doc.text(txt(el),X,y);y+=8}
-      else {doc.setFont("helvetica","normal");doc.setFontSize(9);doc.setTextColor(110);var L2=doc.splitTextToSize(txt(el),W);room(L2.length*4.5);doc.text(L2,X,y+2);y+=L2.length*4.5+3}
+      } else {doc.setFont("helvetica","normal");doc.setFontSize(9);doc.setTextColor(110);var L2=doc.splitTextToSize(txt(el),W);room(L2.length*4.5);doc.text(L2,X,y+2);y+=L2.length*4.5+3}
     });
-    return nativeShare(name+".pdf",doc.output("datauristring").split(",")[1]);
+    return nativeShare(name+".pdf",doc.output("datauristring").split(",")[1],"application/pdf");
   });
 }
 function dl(name,text,type){
-  if(NATIVE){nativeShare(name,btoa(unescape(encodeURIComponent(text))));return}
+  if(NATIVE){nativeShare(name,btoa(unescape(encodeURIComponent(text))),type.split(";")[0]);return}
   var b=new Blob([text],{type:type});
   var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();a.remove();
 }
-function printReport(h,name){
+$("csv").onclick=function(){
+  var rows=["Data;DAS;Litri;Temp_C;Kg;kWh;Euro"];
+  var list=S.hist.slice();
+  if(!list.length&&last){list=[{t:new Date().toISOString(),das:$("das").value.trim(),L:last.L,T:last.T,kg:last.r.kg,kwh:last.r.kwh,cost:last.r.cost!=null?last.r.cost:null}]}
+  if(!list.length){toast("Nessun dato");return}
+  list.forEach(function(e){
+    var n=function(x){return String(x).replace(".",",")};
+    rows.push([e.t,'"'+String(e.das||"").replace(/"/g,'""')+'"',n(e.L),n(e.T),n(e.kg.toFixed(3)),n(e.kwh.toFixed(2)),e.cost!=null?n(e.cost.toFixed(2)):""].join(";"));
+  });
+  dl("storico-gpl.csv","\ufeff"+rows.join("\n"),"text/csv;charset=utf-8");
+};
+function esc(x){return String(x).replace(/[&<>]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;"}[c]})}
+function exportPDF(){
+  if(!last&&!S.hist.length){toast("Nessun dato");return}
+  var dasV=$("das").value.trim(),now=new Date(),h='<h1>GPL Calc · Rapporto di carico'+(dasV?' <span class="das-t">· DAS n° '+esc(dasV)+'</span>':'')+'</h1><div class="sub">Generato il '+now.toLocaleDateString("it-IT",{day:"2-digit",month:"long",year:"numeric"})+" alle "+now.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})+"</div>";
+  if(last){
+    h+="<h2>Carico attuale</h2><table><tbody>";
+    h+="<tr><td>Litri caricati</td><td>"+fmt(last.L,1)+" L</td></tr><tr><td>Temperatura ambiente</td><td>"+fmt(last.T,1)+" °C</td></tr><tr><td>Densità a 15 °C (DAS)</td><td>"+fmt(last.r.rho15,4)+" kg/L</td></tr><tr><td><b>Massa di GPL</b></td><td><b>"+fmt(last.r.kg,2)+" kg</b></td></tr>";
+    cur.forEach(function(r){h+="<tr><td>"+esc(r[0])+"</td><td>"+esc(r[1])+"</td></tr>"});
+    h+="</tbody></table>";
+  }
+  if(S.hist.length){
+    h+="<h2>Storico</h2><table><thead><tr><th>Data</th><th>DAS</th><th>Litri</th><th>°C</th><th>kg</th><th>kWh</th><th>€</th></tr></thead><tbody>";
+    S.hist.slice().reverse().forEach(function(e){var d=new Date(e.t);
+      h+="<tr><td>"+d.toLocaleDateString("it-IT")+" "+d.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})+"</td><td>"+esc(e.das||"—")+"</td><td>"+fmt(e.L,1)+"</td><td>"+fmt(e.T,1)+"</td><td>"+fmt(e.kg,2)+"</td><td>"+fmt(e.kwh,1)+"</td><td>"+(e.cost!=null?fmt(e.cost,2):"—")+"</td></tr>"});
+    h+="</tbody></table>";
+  }
+  h+='<p class="sub" style="margin-top:18px">Calcolo dalla densità a 15 °C del DAS corretta per la temperatura. Uso informativo.</p>';
   $("report").innerHTML=h;
-  if(NATIVE){reportToPDF(name).catch(function(){toast(TX.export_err)});return}
-  var old=document.title;document.title=name;
+  if(NATIVE){reportToPDF("rapporto-gpl-"+now.toISOString().slice(0,10)).catch(function(){toast("Impossibile esportare il file")});return}
+  var old=document.title;document.title="rapporto-gpl-"+now.toISOString().slice(0,10);
   window.addEventListener("afterprint",function f(){document.title=old;window.removeEventListener("afterprint",f)});
   setTimeout(function(){window.print()},50);
 }
-function tr(k,v,b){return "<tr><td>"+(b?"<b>"+esc(k)+"</b>":esc(k))+"</td><td>"+(b?"<b>"+esc(v)+"</b>":esc(v))+"</td></tr>"}
-function stamp(){var now=new Date();return fill2(TX.generated,{d:now.toLocaleDateString(LOCALE,{day:"2-digit",month:"long",year:"numeric"}),h:now.toLocaleTimeString(LOCALE,{hour:"2-digit",minute:"2-digit"})})}
-function exportOne(){
-  if(!last){toast(TX.need_liters);return}
-  var r=last.r,dasV=$("das").value.trim(),now=new Date();
-  var h='<h1>'+TX.doc_title+(dasV?' <span class="das-t">· DAS n° '+esc(dasV)+'</span>':'')+'</h1><div class="sub">'+stamp()+'</div>';
-  h+="<h2>"+TX.sec_delivery+"</h2><table><tbody>"+tr(TX.client,$("cli").value.trim()||"—")+tr(TX.address,$("addr").value.trim()||"—")+tr(TX.plate,$("plate").value.trim()||"—")+tr(TX.driver,$("drv").value.trim()||"—")+"</tbody></table>";
-  h+="<h2>"+TX.sec_measure+"</h2><table><tbody>";
-  if($("mIni").value!==""||$("mFin").value!=="")h+=tr(TX.meter_start,$("mIni").value?fmt(num("mIni"),1)+" L":"—")+tr(TX.meter_end,$("mFin").value?fmt(num("mFin"),1)+" L":"—");
-  h+=tr(TX.liters_label,fmt(last.L,1)+" L")+tr(TX.sec_temp,fmt(last.T,1)+" °C")+tr(TX.rho15,fmt(r.rho15,4)+" kg/L")+tr(fill2(TX.dens_at,{t:fmt(last.T,1)}),fmt(r.rho,4)+" kg/L")+tr(TX.l15,fmt(r.v15,1)+" L",true)+tr(TX.hero_t,fmt(r.kg,2)+" kg",true)+"</tbody></table>";
-  if(r.cap!=null)h+="<h2>"+TX.sec_tank+"</h2><table><tbody>"+tr(TX.tank_cap,fmt(r.cap,0)+" L")+tr(TX.tank_before,fmt(r.pIni,0)+" %")+tr(TX.tank_after,fmt(r.pFin,1)+" %"+(r.over?" ⚠":""))+tr(TX.tank_limit,fmt(r.lim,0)+" %")+"</tbody></table>";
-  h+="<h2>"+TX.sec_excise+"</h2><table><tbody>"+tr(TX.use,$("use").options[$("use").selectedIndex].text)+tr(TX.rate,fmt(r.rate,5)+" €/1000 kg")+tr(TX.excise,fmt(r.acc,2)+" €",true)+"</tbody></table>";
-  h+='<p class="sign">'+TX.sign_drv+' ______________________      '+TX.sign_cli+' ______________________</p>';
-  h+='<p class="sub" style="margin-top:18px">'+TX.doc_note+'</p>';
-  printReport(h,TX.file_one+"-"+(dasV||now.toISOString().slice(0,10)).replace(/[^\w-]/g,""));
-}
-function exportHist(){
-  if(!S.hist.length){toast(TX.no_data);return}
-  var h='<h1>'+TX.hist_title+'</h1><div class="sub">'+stamp()+'</div>'+histRows();
-  var tk=0,tl=0,ta=0;S.hist.forEach(function(e){tk+=e.kg||0;tl+=e.v15||0;ta+=e.acc||0});
-  h+="<h2>"+TX.totals+"</h2><table><tbody>"+tr(TX.h_count,String(S.hist.length))+tr(TX.l15,fmt(tl,1)+" L")+tr("kg",fmt(tk,2)+" kg",true)+tr(TX.excise,fmt(ta,2)+" €")+"</tbody></table>";
-  printReport(h,TX.file_hist+"-"+new Date().toISOString().slice(0,10));
-}
+$("pdf").onclick=exportPDF;$("pdf2").onclick=exportPDF;
+$("clear").onclick=function(){if(S.hist.length&&confirm("Cancellare tutto lo storico?")){S.hist=[];persist();renderHist()}};
 
-/* ---------- Eventi ---------- */
-function saveSettings(){S.rho15=$("rho15").value;S.fill=$("fill").value;S.use=$("use").value;S.rate=$("rate").value;S.plate=$("plate").value;S.drv=$("drv").value;persist()}
-$("liters").addEventListener("input",render);
-["mIni","mFin"].forEach(function(id){$(id).addEventListener("input",meter)});
-["rho15","fill","cap","pIni","rate"].forEach(function(id){$(id).addEventListener("input",function(){saveSettings();render()})});
-["plate","drv"].forEach(function(id){$(id).addEventListener("input",saveSettings)});
-$("use").addEventListener("change",function(){var u=$("use").value;$("rate").readOnly=u!=="custom";if(u!=="custom")$("rate").value=RATES[u];saveSettings();render()});
-$("temp").addEventListener("input",function(){if(isFinite(num("temp"))){$("tsrc").className="badge";$("tsrc").textContent=TX.t_manual;render()}});
-$("minus").onclick=function(){if($("liters").readOnly)return;var v=Math.max(0,readL()-1);$("liters").value=v||"";render()};
-$("plus").onclick=function(){if($("liters").readOnly)return;$("liters").value=readL()+1;render()};
-$("geo").onclick=geolocate;
-$("cityForm").addEventListener("submit",function(e){e.preventDefault();var q=$("city").value.trim();if(q)searchCity(q)});
-$("save").onclick=function(){
-  if(!last){toast(TX.need_liters);return}
-  S.hist.push(entry());if(S.hist.length>500)S.hist.shift();
-  /* pronto per la prossima consegna: la lettura finale diventa quella iniziale */
-  var fin=$("mFin").value;
-  ["das","cli","addr","cap","pIni","mFin","liters"].forEach(function(id){$(id).value=""});
-  $("mIni").value=fin;S.mIni=fin;persist();meter();renderHist();toast(TX.saved,3000);
-};
-$("copy").onclick=function(){
-  if(!last){toast(TX.need_liters);return}
-  var r=last.r,L=[];
-  if($("das").value.trim())L.push("DAS n° "+$("das").value.trim());
-  if($("cli").value.trim())L.push(TX.client+": "+$("cli").value.trim());
-  L.push(TX.liters_label+": "+fmt(last.L,1)+" L · "+fmt(last.T,1)+" °C");
-  L.push(TX.l15+": "+fmt(r.v15,1)+" L");
-  L.push(TX.hero_t+": "+fmt(r.kg,2)+" kg");
-  L.push(TX.rho15+": "+fmt(r.rho15,4));
-  if(r.cap!=null)L.push(TX.tank_after+": "+fmt(r.pFin,1)+" %");
-  L.push(TX.excise+": "+fmt(r.acc,2)+" €");
-  var t=L.join("\n");
-  (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){toast(TX.copied)},function(){
-    var a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();try{document.execCommand("copy");toast(TX.copied)}catch(e){}a.remove()});
-};
-$("csv").onclick=function(){
-  var list=S.hist.slice();
-  if(!list.length&&last)list=[entry()];
-  if(!list.length){toast(TX.no_data);return}
-  var q=function(x){return '"'+String(x==null?"":x).replace(/"/g,'""')+'"'},n=function(x,d){return x==null||!isFinite(x)?"":String(Number(x).toFixed(d)).replace(".",",")};
-  var rows=[TX.csv_head];
-  list.forEach(function(e){rows.push([e.t,q(e.das),q(e.cli),q(e.addr),q(e.plate),q(e.drv),q(e.mIni),q(e.mFin),n(e.L,1),n(e.T,1),n(e.rho15,4),n(e.v15,1),n(e.kg,3),n(e.acc,2),n(e.pIni,0),n(e.pFin,1)].join(";"))});
-  dl(TX.file_csv+".csv","﻿"+rows.join("\n"),"text/csv;charset=utf-8");
-};
-$("pdf").onclick=exportOne;$("pdf2").onclick=exportHist;
-$("clear").onclick=function(){if(S.hist.length&&confirm(TX.confirm_clear)){S.hist=[];persist();renderHist()}};
-
-/* ---------- Avvio ---------- */
-$("rho15").value=S.rho15||"0.5040";$("fill").value=S.fill||80;$("use").value=S.use||"heat";
-$("rate").value=S.use==="custom"?S.rate:RATES[S.use||"heat"];$("rate").readOnly=(S.use||"heat")!=="custom";
-$("plate").value=S.plate||"";$("drv").value=S.drv||"";$("mIni").value=S.mIni||"";
-renderHist();meter();
+/* ---------- Inicio ---------- */
+$("rho15").value=S.rho15||"0.5040";
+renderHist();render();
 if(S.city){fetchTemp(S.city.lat,S.city.lon,S.city.name);$("city").value=S.city.name}else geolocate();
+$("liters").focus();
 })();
 </script>
 <script>/* Estadísticas de uso (sin cookies ni datos personales) */

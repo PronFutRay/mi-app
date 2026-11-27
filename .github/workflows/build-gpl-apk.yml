@@ -3,7 +3,7 @@ name: Build GPL Calc APK
 on:
   push:
     branches: [main]
-    paths: ['gpl-calc/**', 'gpl-calc-it/**', 'gpl-src/**', 'gpl-icons/**', 'gpl-apk/**', '.github/workflows/build-gpl-apk.yml']
+    paths: ['gpl-calc/**', 'gpl-calc-it/**', 'gpl-icons/**', 'gpl-apk/**', '.github/workflows/build-gpl-apk.yml']
   workflow_dispatch:
 
 permissions:
