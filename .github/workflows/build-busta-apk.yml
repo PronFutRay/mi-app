@@ -25,6 +25,9 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      - name: Firma fija (para que las actualizaciones se instalen encima)
+        run: mkdir -p $HOME/.android && cp $GITHUB_WORKSPACE/android-signing/debug.keystore $HOME/.android/debug.keystore
+
       - name: Instalar Capacitor
         run: npm install
 
