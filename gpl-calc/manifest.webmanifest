@@ -1,0 +1,38 @@
+{
+ "id": "./",
+ "name": "GPL Calc",
+ "short_name": "GPL Calc",
+ "description": "Calculadora de carga de GPL: litros a kg con temperatura y DAS",
+ "lang": "es",
+ "start_url": "./",
+ "scope": "./",
+ "display": "standalone",
+ "background_color": "#0b1f3a",
+ "theme_color": "#0b1f3a",
+ "icons": [
+  {
+   "src": "../gpl-icons/icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "../gpl-icons/icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "../gpl-icons/maskable-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  },
+  {
+   "src": "../gpl-icons/icon.svg",
+   "sizes": "any",
+   "type": "image/svg+xml",
+   "purpose": "any"
+  }
+ ]
+}

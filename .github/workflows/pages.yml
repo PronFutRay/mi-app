@@ -30,7 +30,9 @@ jobs:
           mkdir -p _site/gpl-calc
           cp gpl-calc/index.html _site/gpl-calc/
           mkdir -p _site/gpl-calc-it
-          cp gpl-calc-it/index.html _site/gpl-calc-it/
+          cp gpl-calc-it/index.html gpl-calc-it/manifest.webmanifest _site/gpl-calc-it/
+          cp gpl-calc/manifest.webmanifest _site/gpl-calc/
+          cp -r gpl-icons _site/gpl-icons
           mkdir -p _site/busta-paga
           cp busta-paga/index.html busta-paga/app.js busta-paga/parser.js busta-paga/sample.js busta-paga/config.js busta-paga/money.js busta-paga/manifest.json busta-paga/icon-192.png busta-paga/icon-512.png _site/busta-paga/
           cp -r busta-paga/vendor _site/busta-paga/
