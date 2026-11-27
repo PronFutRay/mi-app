@@ -14,7 +14,8 @@ var GalaxiaEngine = (function () {
     MAX_HUMANS: 40,
     START_MASS: 20,
     EAT_RATIO: 1.25,
-    COLORS: 12
+    COLORS: 12,
+    STYLES: 4
   };
 
   var BOT_NAMES = ["Nova", "Cometa", "Pulsar", "Quasar", "Orion", "Vega", "Lyra", "Sirio", "Andrómeda",
@@ -75,13 +76,15 @@ var GalaxiaEngine = (function () {
     return best;
   };
 
-  World.prototype.addPlayer = function (name, bot) {
+  World.prototype.addPlayer = function (name, bot, look) {
+    look = look || {};
     var s = this.safeSpot();
     var p = {
       id: this.nextId++, name: cleanName(name), bot: !!bot,
       x: s[0], y: s[1], m: bot ? rnd(15, 120) : CFG.START_MASS, r: 0,
       a: rnd(0, Math.PI * 2), th: 0, boost: false,
-      c: (Math.random() * CFG.COLORS) | 0,
+      c: (look.c >= 0 && look.c < CFG.COLORS) ? (look.c | 0) : (Math.random() * CFG.COLORS) | 0,
+      s: (look.s >= 0 && look.s < CFG.STYLES) ? (look.s | 0) : (Math.random() * CFG.STYLES) | 0,
       kills: 0, best: 0, born: this.time, shield: bot ? 0 : 3, ejectT: 0,
       ai: { t: 0, a: rnd(0, 6.28), th: 0.7, boost: false }
     };
@@ -208,7 +211,7 @@ var GalaxiaEngine = (function () {
   World.prototype.snapshot = function () {
     var out = [];
     this.players.forEach(function (p) {
-      out.push([p.id, r1(p.x), r1(p.y), r1(p.m), p.c, p.name, p.shield > 0 ? 1 : 0, p.boost ? 1 : 0]);
+      out.push([p.id, r1(p.x), r1(p.y), r1(p.m), p.c, p.name, p.shield > 0 ? 1 : 0, p.boost ? 1 : 0, p.s]);
     });
     return out;
   };
@@ -279,7 +282,7 @@ var GalaxiaEngine = (function () {
     if (msg.t === "join") {
       if (c.pid && this.world.players.has(c.pid)) { c.send(JSON.stringify({ t: "spawn", id: c.pid })); return; }
       if (this.humans() >= CFG.MAX_HUMANS) { c.send(JSON.stringify({ t: "full" })); return; }
-      var p = this.world.addPlayer(msg.name, false);
+      var p = this.world.addPlayer(msg.name, false, { c: +msg.c, s: +msg.s });
       c.pid = p.id; c.joins++;
       c.send(JSON.stringify({ t: "spawn", id: p.id }));
       this.fillBots();
